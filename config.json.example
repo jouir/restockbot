@@ -1,0 +1,18 @@
+{
+  "twitter": {
+    "consumer_key": "***",
+    "consumer_secret": "***",
+    "access_token": "***",
+    "access_token_secret": "***"
+  },
+  "urls": [
+    "https://www.topachat.com/pages/produits_cat_est_micro_puis_rubrique_est_wgfx_pcie_puis_f_est_58-11447,11445,11446,11559,11558.html",
+    "https://www.ldlc.com/informatique/pieces-informatique/carte-graphique-interne/c4684/+fv121-19183,19184,19185,19339,19340.html",
+    "https://www.materiel.net/carte-graphique/l426/+fv121-19183,19184,19185,19339,19340/",
+    "https://www.alternate.be/Hardware/Grafische-kaarten/NVIDIA/RTX-3060-Ti",
+    "https://www.alternate.be/Hardware/Grafische-kaarten/NVIDIA/RTX-3070",
+    "https://www.alternate.be/Hardware/Grafische-kaarten/NVIDIA/RTX-3080",
+    "https://www.alternate.be/Hardware/Grafische-kaarten/NVIDIA/RTX-3090"
+  ],
+  "executable_path": "/usr/bin/geckodriver"
+}

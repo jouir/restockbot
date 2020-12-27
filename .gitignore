@@ -1,0 +1,6 @@
+__pycache__
+config.json
+*.html
+TODO.txt
+restock.db
+geckodriver.log
