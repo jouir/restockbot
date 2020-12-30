@@ -92,3 +92,11 @@ class AlternateCrawler(ProductCrawler):
             webpage = self.fetch(url=url)
             parser.feed(webpage)
         self.products += self.add_shop(parser.products)
+
+
+CRAWLERS = {
+    'topachat.com': TopAchatCrawler,
+    'ldlc.com': LDLCCrawler,
+    'materiel.net': MaterielNetCrawler,
+    'alternate.be': AlternateCrawler
+}

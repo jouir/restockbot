@@ -4,8 +4,7 @@ import logging
 from concurrent import futures
 
 from config import extract_shops, read_config
-from crawlers import (AlternateCrawler, LDLCCrawler, MaterielNetCrawler,
-                      TopAchatCrawler)
+from crawlers import CRAWLERS
 from db import create_tables, list_shops, upsert_products, upsert_shops
 from notifiers import TwitterNotifier
 
@@ -34,17 +33,7 @@ def setup_logging(args):
 
 def crawl_shop(shop, urls):
     logger.debug(f'processing {shop}')
-    if shop.name == 'topachat.com':
-        crawler = TopAchatCrawler(shop=shop, urls=urls)
-    elif shop.name == 'ldlc.com':
-        crawler = LDLCCrawler(shop=shop, urls=urls)
-    elif shop.name == 'materiel.net':
-        crawler = MaterielNetCrawler(shop=shop, urls=urls)
-    elif shop.name == 'alternate.be':
-        crawler = AlternateCrawler(shop=shop, urls=urls)
-    else:
-        logger.warning(f'shop {shop} not supported')
-        return []
+    crawler = CRAWLERS[shop.name](shop=shop, urls=urls)
     return crawler.products
 
 
