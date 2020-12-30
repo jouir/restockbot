@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import logging
+from concurrent import futures
 
 from config import extract_shops, read_config
 from crawlers import (AlternateCrawler, LDLCCrawler, MaterielNetCrawler,
@@ -21,6 +22,7 @@ def parse_arguments():
     parser.add_argument('-c', '--config', default='config.json', help='configuration file location')
     parser.add_argument('-N', '--disable-notifications', dest='disable_notifications', action='store_true',
                         help='Do not send notifications')
+    parser.add_argument('-t', '--workers', type=int, help='number of workers for crawling')
     args = parser.parse_args()
     return args
 
@@ -28,6 +30,22 @@ def parse_arguments():
 def setup_logging(args):
     log_format = '%(asctime)s %(levelname)s: %(message)s' if args.logfile else '%(levelname)s: %(message)s'
     logging.basicConfig(format=log_format, level=args.loglevel, filename=args.logfile)
+
+
+def crawl_shop(shop, urls):
+    logger.debug(f'processing {shop}')
+    if shop.name == 'topachat.com':
+        crawler = TopAchatCrawler(shop=shop, urls=urls)
+    elif shop.name == 'ldlc.com':
+        crawler = LDLCCrawler(shop=shop, urls=urls)
+    elif shop.name == 'materiel.net':
+        crawler = MaterielNetCrawler(shop=shop, urls=urls)
+    elif shop.name == 'alternate.be':
+        crawler = AlternateCrawler(shop=shop, urls=urls)
+    else:
+        logger.warning(f'shop {shop} not supported')
+        return []
+    return crawler.products
 
 
 def main():
@@ -47,24 +65,17 @@ def main():
                                    access_token=config['twitter']['access_token'],
                                    access_token_secret=config['twitter']['access_token_secret'])
 
-    for shop in list_shops():
-        logger.debug(f'processing {shop}')
-        urls = shops.get(shop.name)
-        if not urls:
-            logger.warning(f'cannot find urls for shop {shop} in the configuration file')
-            continue
-        if shop.name == 'topachat.com':
-            crawler = TopAchatCrawler(shop=shop, urls=urls)
-        elif shop.name == 'ldlc.com':
-            crawler = LDLCCrawler(shop=shop, urls=urls)
-        elif shop.name == 'materiel.net':
-            crawler = MaterielNetCrawler(shop=shop, urls=urls)
-        elif shop.name == 'alternate.be':
-            crawler = AlternateCrawler(shop=shop, urls=urls)
-        else:
-            logger.warning(f'shop {shop} not supported')
-            continue
-        upsert_products(products=crawler.products, notifier=notifier)
+    with futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
+        all_futures = []
+        for shop in list_shops():
+            urls = shops.get(shop.name)
+            if not urls:
+                logger.warning(f'cannot find urls for shop {shop} in the configuration file')
+                continue
+            all_futures.append(executor.submit(crawl_shop, shop, urls))
+        for future in futures.as_completed(all_futures):
+            products = future.result()
+            upsert_products(products=products, notifier=notifier)
 
 
 if __name__ == '__main__':
