@@ -20,7 +20,7 @@ def parse_arguments():
     parser.add_argument('-o', '--logfile', help='logging file location')
     parser.add_argument('-c', '--config', default='config.json', help='configuration file location')
     parser.add_argument('-N', '--disable-notifications', dest='disable_notifications', action='store_true',
-                        help='Do not send notifications')
+                        help='do not send notifications')
     parser.add_argument('-t', '--workers', type=int, help='number of workers for crawling')
     args = parser.parse_args()
     return args
