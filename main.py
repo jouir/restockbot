@@ -59,7 +59,6 @@ def main():
         for shop in list_shops():
             urls = shops.get(shop.name)
             if not urls:
-                logger.warning(f'cannot find urls for shop {shop} in the configuration file')
                 continue
             all_futures.append(executor.submit(crawl_shop, shop, urls))
         for future in futures.as_completed(all_futures):

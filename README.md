@@ -7,7 +7,7 @@ new generation (AMD RX 6000 series, NVIDIA GeForce RTX 3000 series). Even older 
 Based on Debian 10:
 
 ```
-apt install python3-selenium python3-sqlalchemy python3-tweepy firefox-esr
+apt install python3-selenium python3-sqlalchemy python3-tweepy python3-bs4 firefox-esr
 curl -L -s https://github.com/mozilla/geckodriver/releases/download/v0.28.0/geckodriver-v0.28.0-linux64.tar.gz | tar xvpzf - -C /usr/local/bin/
 chown root:root /usr/local/bin/geckodriver
 chmod +x /usr/local/bin/geckodriver

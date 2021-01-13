@@ -1,6 +1,8 @@
 import logging
 from html.parser import HTMLParser
 
+from bs4 import BeautifulSoup
+from bs4.element import Tag
 from db import Product
 from utils import parse_base_url
 
@@ -401,3 +403,72 @@ class AlternateParser(ProductParser):
     def parse_url(self, string):
         string = string.split('?')[0]  # remove query string
         return f'{self._base_url}{string}'
+
+
+class MineShopParser:
+    def __init__(self, url=None):
+        self.products = []
+        self._product = Product()
+
+    def feed(self, webpage):
+        tags = self._find_products(webpage)
+        for tag in tags:
+            # product has at least a name
+            name = self._parse_name(tag)
+            if not name:
+                continue
+            self._product.name = name
+            # parse all other attributes
+            price, currency = self._parse_price(tag)
+            self._product.price = price
+            self._product.price_currency = currency
+            self._product.url = self._parse_url(tag)
+            self._product.available = self._parse_availability(tag)
+            # then add product to list
+            self.products.append(self._product)
+            self._product = Product()
+
+    @staticmethod
+    def _find_products(webpage):
+        soup = BeautifulSoup(webpage, features='lxml')
+        products = []
+        tags = soup.find_all('ul')
+        for tag in tags:
+            if 'products' in tag.get('class', []):
+                for child in tag.children:
+                    products.append(child)
+        return products
+
+    @staticmethod
+    def _parse_name(product):
+        title = product.find('h2')
+        if type(title) is Tag:
+            return title.text
+
+    @staticmethod
+    def _parse_price(product):
+        tag = product.find('bdi')
+        if type(tag) is Tag:
+            string = tag.text
+            if '€' in string:
+                currency = 'EUR'
+                string = string.replace('€', '').strip()
+            price = float(string)
+            return price, currency
+
+    @staticmethod
+    def _parse_url(product):
+        tag = product.find('a')
+        if type(tag) is Tag and tag.get('href'):
+            return tag['href']
+
+    @staticmethod
+    def _parse_availability(product):
+        tag = product.find('p')
+        if type(tag) is Tag:
+            attributes = tag.get('class', [])
+            if 'stock' in attributes:
+                attributes.remove('stock')
+                availability = attributes[0]
+                return availability != 'out-of-stock'
+        return True

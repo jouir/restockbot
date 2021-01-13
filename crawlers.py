@@ -1,7 +1,7 @@
 import logging
 
 from parsers import (AlternateParser, LDLCParser, MaterielNetParser,
-                     TopAchatParser)
+                     MineShopParser, TopAchatParser)
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
@@ -94,9 +94,20 @@ class AlternateCrawler(ProductCrawler):
         self.products += self.add_shop(parser.products)
 
 
+class MineShopCrawler(ProductCrawler):
+    def __init__(self, shop, urls):
+        super().__init__(shop)
+        parser = MineShopParser()
+        for url in urls:
+            webpage = self.fetch(url=url)
+            parser.feed(webpage)
+            self.products += self.add_shop(parser.products)
+
+
 CRAWLERS = {
     'topachat.com': TopAchatCrawler,
     'ldlc.com': LDLCCrawler,
     'materiel.net': MaterielNetCrawler,
-    'alternate.be': AlternateCrawler
+    'alternate.be': AlternateCrawler,
+    'mineshop.eu': MineShopCrawler
 }
