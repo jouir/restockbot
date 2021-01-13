@@ -40,7 +40,6 @@ You will have to open the URL and authenticate:
 
 ```
 Please go to https://api.twitter.com/oauth/authorize?oauth_token=****
-
 ```
 Click on **Authorize app**. A verifier code will be shown. Go back to your console and enter the code.
 
