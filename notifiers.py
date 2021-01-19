@@ -15,6 +15,7 @@ class TwitterNotifier(object):
         'rtx 3090': ['#nvidia', '#rtx3090'],
         'rx 6800 xt': ['#amd', '#rx6800xt'],
         'rx 6800': ['#amd', '#rx6800'],
+        'rx 5700 xt': ['#amd', '#rx5700xt'],
     }
 
     _currency_map = {
