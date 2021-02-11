@@ -49,7 +49,7 @@ class TwitterNotifier(object):
             logger.info(f'tweet {tweet.id} sent with message "{message}"')
             return tweet
         except tweepy.error.TweepError as err:
-            logger.warning('cannot send tweet with message "{message}"')
+            logger.warning(f'cannot send tweet with message "{message}"')
             logger.warning(str(err))
 
     def _parse_hashtags(self, product):
