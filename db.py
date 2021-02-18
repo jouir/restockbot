@@ -72,8 +72,8 @@ def upsert_shops(names):
             if not shop_database:
                 logger.info(f'{shop} added')
                 session.add(shop)
-        session.commit()
-        logger.debug('transaction committed')
+                session.commit()
+                logger.debug('transaction committed')
     except exc.SQLAlchemyError:
         logger.exception('cannot commit transaction')
     finally:
@@ -111,8 +111,8 @@ def upsert_products(products, notifier=None):
                               Product.available: product.available, Product.url: product.url,
                               Product.tweet_id: tweet_id, Product.updated_at: now})
                 logger.info(f'{product} updated')
-        session.commit()
-        logger.debug('transaction committed')
+            session.commit()
+            logger.debug('transaction committed')
     except exc.SQLAlchemyError:
         logger.exception('cannot commit transaction')
     finally:
