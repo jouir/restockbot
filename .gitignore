@@ -1,6 +1,7 @@
-__pycache__
-config.json
-*.html
-TODO.txt
-restock.db
-geckodriver.log
+bin/
+restockbot.db
+restockbot.json
+restockbot.log
+restockbot.pid
+ferret.log
+shop.fql
