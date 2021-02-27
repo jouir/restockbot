@@ -16,14 +16,3 @@ func ExtractShopName(link string) (name string, err error) {
 	re := regexp.MustCompile(`^www\.`)
 	return strings.ToLower(re.ReplaceAllString(u.Hostname(), "")), nil
 }
-
-// compileRegex transforms a regex from string to regexp instance
-func compileRegex(pattern string) (regex *regexp.Regexp, err error) {
-	if pattern != "" {
-		regex, err = regexp.Compile(pattern)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return regex, nil
-}

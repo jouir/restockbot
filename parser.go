@@ -25,13 +25,13 @@ type Parser struct {
 func NewParser(includeRegex string, excludeRegex string) (*Parser, error) {
 
 	log.Debugf("compiling include name regex")
-	includeRegexCompiled, err := compileRegex(includeRegex)
+	includeRegexCompiled, err := regexp.Compile(includeRegex)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Debugf("compiling exclude name regex")
-	excludeRegexCompiled, err := compileRegex(excludeRegex)
+	excludeRegexCompiled, err := regexp.Compile(excludeRegex)
 	if err != nil {
 		return nil, err
 	}
