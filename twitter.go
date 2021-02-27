@@ -25,7 +25,7 @@ type TwitterNotifier struct {
 	db          *gorm.DB
 	client      *twitter.Client
 	user        *twitter.User
-	hashtagsMap map[string]string
+	hashtagsMap []map[string]string
 }
 
 // NewTwitterNotifier creates a TwitterNotifier
@@ -80,9 +80,11 @@ func (c *TwitterNotifier) replyToTweet(tweetID int64, message string) (int64, er
 // parse product name to build a list of hashtags
 func (c *TwitterNotifier) buildHashtags(productName string) string {
 	productName = strings.ToLower(productName)
-	for pattern, value := range c.hashtagsMap {
-		if ok, _ := regexp.MatchString(pattern, productName); ok {
-			return value
+	for _, rule := range c.hashtagsMap {
+		for pattern, value := range rule {
+			if ok, _ := regexp.MatchString(pattern, productName); ok {
+				return value
+			}
 		}
 	}
 	return ""

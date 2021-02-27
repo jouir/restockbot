@@ -72,7 +72,7 @@ Options:
     * `consumer_secret`: API secret of your Twitter application
     * `access_token`: authentication token generated for your Twitter account
     * `access_token_secret`: authentication token secret generated for your Twitter account
-    * `hashtags`: map of key/values used to append hashtags to each tweet. Key is the pattern to match in the product name, value is the string to append to the tweet. For example, `{"twitter": {"hashtags": {"rtx 3090": "#nvidia #rtx3090"}}}` will detect `rtx 3090` to append `#nvidia #rtx3090` at the end of the tweet.
+    * `hashtags`: list of key/value used to append hashtags to each tweet. Key is the pattern to match in the product name, value is the string to append to the tweet. For example, `{"twitter": {"hashtags": [{"rtx 3090": "#nvidia #rtx3090"}]}}` will detect `rtx 3090` to append `#nvidia #rtx3090` at the end of the tweet.
 * `include_regex` (optional): include products with a name matching this regexp
 * `exclude_regex` (optional): exclude products with a name matching this regexp
 

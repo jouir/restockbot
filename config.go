@@ -16,11 +16,11 @@ type Config struct {
 
 // TwitterConfig to store Twitter API secrets
 type TwitterConfig struct {
-	ConsumerKey       string            `json:"consumer_key"`
-	ConsumerSecret    string            `json:"consumer_secret"`
-	AccessToken       string            `json:"access_token"`
-	AccessTokenSecret string            `json:"access_token_secret"`
-	Hashtags          map[string]string `json:"hashtags"`
+	ConsumerKey       string              `json:"consumer_key"`
+	ConsumerSecret    string              `json:"consumer_secret"`
+	AccessToken       string              `json:"access_token"`
+	AccessTokenSecret string              `json:"access_token_secret"`
+	Hashtags          []map[string]string `json:"hashtags"`
 }
 
 // NewConfig creates a Config struct
