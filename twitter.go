@@ -90,16 +90,18 @@ func (c *TwitterNotifier) buildHashtags(productName string) string {
 	return ""
 }
 
-// replace price currency by its symbol
+// formatPrice using internationalization rules
+// euro sign is placed after the value
+// default the currency, or symbol if applicable, is placed before the value
 func formatPrice(value float64, currency string) string {
-	var symbol string
 	switch {
 	case currency == "EUR":
-		symbol = "€"
+		return fmt.Sprintf("%.2f€", value)
+	case currency == "USD":
+		return fmt.Sprintf("$%.2f", value)
 	default:
-		symbol = currency
+		return fmt.Sprintf("%s%.2f", currency, value)
 	}
-	return fmt.Sprintf("%.2f%s", value, symbol)
 }
 
 // NotifyWhenAvailable create a Twitter status for announcing that a product is available
