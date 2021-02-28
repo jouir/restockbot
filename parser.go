@@ -124,6 +124,8 @@ func createQuery(shopName string, url string) (string, error) {
 		return createQueryForLDLC(url), nil
 	case "materiel.net":
 		return createQueryForMaterielNet(url), nil
+	case "microcenter.com":
+		return createQueryForMicroCenter(url), nil
 	case "mediamarkt.ch":
 		return createQueryForMediamarktCh(url), nil
 	case "topachat.com":
@@ -328,6 +330,45 @@ LET results = (
         )
         RETURN products
 )
+
+RETURN FLATTEN(results)
+	`
+	return q
+}
+
+func createQueryForMicroCenter(url string) string {
+	q := `
+LET first_page = '` + url + `'
+LET doc = DOCUMENT(first_page, {driver: "cdp"})
+LET base_url = 'https://www.microcenter.com'
+
+LET next_pages = (
+    FOR a IN ELEMENTS(doc, "div .pagination .pages a")
+        RETURN base_url + a.attributes.href
+)
+
+LET pages = SORTED_UNIQUE(APPEND(next_pages, first_page))
+
+LET results = (
+    FOR page IN pages
+        NAVIGATE(doc, page)
+        LET products = (
+            FOR el IN ELEMENTS(doc, "div .products .product_wrapper")
+                LET details = ELEMENT(el, "h2")
+                LET name = INNER_TEXT(details)
+                LET url = ELEMENT(details, "a").attributes.href
+                LET price = TO_FLOAT(ELEMENT(details, "a").attributes."data-price")
+                LET available = LENGTH(ELEMENTS(el, "div .price_wrapper form .STBTN"))>0
+                RETURN {
+                    name: name,
+                    url: base_url + url,
+                    price: price,
+                    price_currency: "USD",
+                    available: available,
+                }
+        )
+        RETURN products
+    )
 
 RETURN FLATTEN(results)
 	`
