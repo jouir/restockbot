@@ -342,6 +342,11 @@ LET first_page = '` + url + `'
 LET doc = DOCUMENT(first_page, {driver: "cdp"})
 LET base_url = 'https://www.microcenter.com'
 
+// determine store id or default to "shippable items" (online store)
+LET detected_store_id = LAST(REGEX_MATCH(first_page, '&storeid=([0-9]*)', true))
+LET store_id = detected_store_id ? detected_store_id : "029" // id of the online store if not found
+COOKIE_SET(doc, {"name": "storeSelected", "value": store_id})
+
 LET next_pages = (
     FOR a IN ELEMENTS(doc, "div .pagination .pages a")
         RETURN base_url + a.attributes.href
@@ -361,7 +366,7 @@ LET results = (
                 LET available = LENGTH(ELEMENTS(el, "div .price_wrapper form .STBTN"))>0
                 RETURN {
                     name: name,
-                    url: base_url + url,
+                    url: base_url + url + "?storeid=" + store_id,
                     price: price,
                     price_currency: "USD",
                     available: available,
