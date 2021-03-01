@@ -8,10 +8,11 @@ import (
 
 // Config to store JSON configuration
 type Config struct {
-	TwitterConfig `json:"twitter"`
-	URLs          []string `json:"urls"`
-	IncludeRegex  string   `json:"include_regex"`
-	ExcludeRegex  string   `json:"exclude_regex"`
+	TwitterConfig  `json:"twitter"`
+	URLs           []string `json:"urls"`
+	IncludeRegex   string   `json:"include_regex"`
+	ExcludeRegex   string   `json:"exclude_regex"`
+	BrowserAddress string   `json:"browser_address"`
 }
 
 // TwitterConfig to store Twitter API secrets

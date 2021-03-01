@@ -75,6 +75,7 @@ Options:
     * `hashtags`: list of key/value used to append hashtags to each tweet. Key is the pattern to match in the product name, value is the string to append to the tweet. For example, `{"twitter": {"hashtags": [{"rtx 3090": "#nvidia #rtx3090"}]}}` will detect `rtx 3090` to append `#nvidia #rtx3090` at the end of the tweet.
 * `include_regex` (optional): include products with a name matching this regexp
 * `exclude_regex` (optional): exclude products with a name matching this regexp
+* `browser_address` (optional): set headless browser address (ex: `http://127.0.0.1:9222`)
 
 ## How to contribute
 

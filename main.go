@@ -100,7 +100,7 @@ func main() {
 	}
 
 	// create parser
-	parser, err := NewParser(config.IncludeRegex, config.ExcludeRegex)
+	parser, err := NewParser(config.BrowserAddress, config.IncludeRegex, config.ExcludeRegex)
 	if err != nil {
 		log.Fatalf("could not create parser: %s", err)
 	}

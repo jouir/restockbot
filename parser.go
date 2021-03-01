@@ -22,7 +22,7 @@ type Parser struct {
 }
 
 // NewParser to create a new Parser instance
-func NewParser(includeRegex string, excludeRegex string) (*Parser, error) {
+func NewParser(browserAddress string, includeRegex string, excludeRegex string) (*Parser, error) {
 	var err error
 	var includeRegexCompiled, excludeRegexCompiled *regexp.Regexp
 
@@ -44,7 +44,7 @@ func NewParser(includeRegex string, excludeRegex string) (*Parser, error) {
 
 	log.Debugf("creating context with headless browser drivers")
 	ctx := context.Background()
-	ctx = drivers.WithContext(ctx, cdp.NewDriver())
+	ctx = drivers.WithContext(ctx, cdp.NewDriver(cdp.WithAddress(browserAddress)))
 	ctx = drivers.WithContext(ctx, http.NewDriver(), drivers.AsDefault())
 
 	return &Parser{
