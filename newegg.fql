@@ -1,0 +1,14 @@
+LET first_page = 'https://www.newegg.com/p/pl?N=100007709%208000%204841'
+LET doc = DOCUMENT(first_page, {driver: "cdp"})
+
+FOR el IN ELEMENTS(doc, "div .item-cell")
+    LET a = ELEMENT(el, "div .item-title")
+    LET price = TO_FLOAT(SUBSTITUTE(SUBSTITUTE(TRIM(INNER_TEXT(ELEMENT(el, "div .price-current"))), '$', ''), ',', ''))
+    LET available = !ELEMENT_EXISTS(el, "div .item-promo")
+    RETURN {
+        name: TRIM(LEFT(INNER_TEXT(a), 100)),
+        url: a.attributes.href,
+        price: price,
+        price_currency: "USD",
+        available: available,
+    }
