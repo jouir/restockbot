@@ -23,17 +23,23 @@ type Parser struct {
 
 // NewParser to create a new Parser instance
 func NewParser(includeRegex string, excludeRegex string) (*Parser, error) {
+	var err error
+	var includeRegexCompiled, excludeRegexCompiled *regexp.Regexp
 
 	log.Debugf("compiling include name regex")
-	includeRegexCompiled, err := regexp.Compile(includeRegex)
-	if err != nil {
-		return nil, err
+	if includeRegex != "" {
+		includeRegexCompiled, err = regexp.Compile(includeRegex)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	log.Debugf("compiling exclude name regex")
-	excludeRegexCompiled, err := regexp.Compile(excludeRegex)
-	if err != nil {
-		return nil, err
+	if excludeRegex != "" {
+		excludeRegexCompiled, err = regexp.Compile(excludeRegex)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	log.Debugf("creating context with headless browser drivers")
@@ -105,13 +111,14 @@ func (p *Parser) filterExclusive(products []*Product) []*Product {
 	var filtered []*Product
 	if p.excludeRegex != nil {
 		for _, product := range products {
-			if !p.excludeRegex.MatchString(product.Name) {
-				log.Debugf("product %s included because it matches does not match the exclude regex", product.Name)
-				filtered = append(filtered, product)
-			} else {
+			if p.excludeRegex.MatchString(product.Name) {
 				log.Debugf("product %s excluded because it matches the exclude regex", product.Name)
+			} else {
+				log.Debugf("product %s included because it does not match the exclude regex", product.Name)
+				filtered = append(filtered, product)
 			}
 		}
+		return filtered
 	}
 	return products
 }
