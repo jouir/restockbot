@@ -79,3 +79,46 @@ func TestFormatPrice(t *testing.T) {
 		})
 	}
 }
+
+/*
+func formatAvailableTweet(shopName string, productName string, productPrice float64, productCurrency string, productURL string, hashtags string) string {
+	// format message
+	formattedPrice := formatPrice(productPrice, productCurrency)
+	message := fmt.Sprintf("%s: %s for %s is available at %s %s", shopName, productName, formattedPrice, productURL, hashtags)
+
+	// truncate tweet if too big
+	if utf8.RuneCountInString(message) > tweetMaxSize {
+		// maximum tweet size - other characters - additional "…" to say product name has been truncated
+		productNameSize := tweetMaxSize - utf8.RuneCountInString(fmt.Sprintf("%s:  for %s is available at %s %s", shopName, formattedPrice, productURL, hashtags)) - 1
+		format := fmt.Sprintf("%%s: %%.%ds… for %%s is available at %%s %%s", productNameSize)
+		message = fmt.Sprintf(format, shopName, productName, formattedPrice, productURL, hashtags)
+	}
+
+	return message
+}
+*/
+
+func TestFormatAvailableTweet(t *testing.T) {
+	tests := []struct {
+		shopName        string
+		productName     string
+		productPrice    float64
+		productCurrency string
+		productURL      string
+		hashtags        string
+		expected        string
+	}{
+		{"shop.com", "my awesome product", 999.99, "USD", "https://shop.com/awesome", "#awesome #product", "shop.com: my awesome product for $999.99 is available at https://shop.com/awesome #awesome #product"},
+		{"shop.com", "my awesome product with very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long name", 999.99, "USD", "https://shop.com/awesome", "#awesome #product", "shop.com: my awesome product with very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very… for $999.99 is available at https://shop.com/awesome #awesome #product"},
+	}
+	for i, tc := range tests {
+		t.Run(fmt.Sprintf("TestFormatAvailableTweet#%d", i), func(t *testing.T) {
+			got := formatAvailableTweet(tc.shopName, tc.productName, tc.productPrice, tc.productCurrency, tc.productURL, tc.hashtags)
+			if got != tc.expected {
+				t.Errorf("for %s, got '%s', want '%s'", tc.productName, got, tc.expected)
+			} else {
+				t.Logf("for %s, got '%s', want '%s'", tc.productName, got, tc.expected)
+			}
+		})
+	}
+}

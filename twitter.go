@@ -5,12 +5,16 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
+
+// maximum number of characters a tweet can support
+const tweetMaxSize = 280
 
 // Tweet to store relationship between a Product and a Twitter notification
 type Tweet struct {
@@ -107,11 +111,8 @@ func formatPrice(value float64, currency string) string {
 // NotifyWhenAvailable create a Twitter status for announcing that a product is available
 // implements the Notifier interface
 func (c *TwitterNotifier) NotifyWhenAvailable(shopName string, productName string, productPrice float64, productCurrency string, productURL string) error {
-	// format message
-	formattedPrice := formatPrice(productPrice, productCurrency)
 	hashtags := c.buildHashtags(productName)
-	message := fmt.Sprintf("%s: %s for %s is available at %s %s", shopName, productName, formattedPrice, productURL, hashtags)
-
+	message := formatAvailableTweet(shopName, productName, productPrice, productCurrency, productURL, hashtags)
 	// create thread
 	tweetID, err := c.createTweet(message)
 	if err != nil {
@@ -127,6 +128,22 @@ func (c *TwitterNotifier) NotifyWhenAvailable(shopName string, productName strin
 	}
 	log.Debugf("tweet %d saved to database", t.TweetID)
 	return nil
+}
+
+func formatAvailableTweet(shopName string, productName string, productPrice float64, productCurrency string, productURL string, hashtags string) string {
+	// format message
+	formattedPrice := formatPrice(productPrice, productCurrency)
+	message := fmt.Sprintf("%s: %s for %s is available at %s %s", shopName, productName, formattedPrice, productURL, hashtags)
+
+	// truncate tweet if too big
+	if utf8.RuneCountInString(message) > tweetMaxSize {
+		// maximum tweet size - other characters - additional "…" to say product name has been truncated
+		productNameSize := tweetMaxSize - utf8.RuneCountInString(fmt.Sprintf("%s:  for %s is available at %s %s", shopName, formattedPrice, productURL, hashtags)) - 1
+		format := fmt.Sprintf("%%s: %%.%ds… for %%s is available at %%s %%s", productNameSize)
+		message = fmt.Sprintf(format, shopName, productName, formattedPrice, productURL, hashtags)
+	}
+
+	return message
 }
 
 // NotifyWhenNotAvailable create a Twitter status replying to the NotifyWhenAvailable status to say it's over
