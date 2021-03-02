@@ -135,6 +135,8 @@ func createQuery(shopName string, url string) (string, error) {
 		return createQueryForMicroCenter(url), nil
 	case "mediamarkt.ch":
 		return createQueryForMediamarktCh(url), nil
+	case "newegg.com":
+		return createQueryForNewegg(url), nil
 	case "topachat.com":
 		return createQueryForTopachat(url), nil
 	default:
@@ -381,6 +383,46 @@ LET results = (
         )
         RETURN products
     )
+
+RETURN FLATTEN(results)
+	`
+	return q
+}
+
+func createQueryForNewegg(url string) string {
+	q := `
+LET first_page = '` + url + `'
+LET doc = DOCUMENT(first_page, {driver: "cdp"})
+
+LET pagination = LAST(ELEMENTS(doc, 'div .list-tool-pagination'))
+LET pages = (
+    FOR button IN ELEMENTS(pagination, 'button')
+        RETURN TO_INT(INNER_TEXT(button))
+)
+
+LET pages_count = MAX(pages)
+
+LET results = (
+    FOR page IN 1..pages_count
+        LET current_page = first_page + '&page=' + page
+
+        NAVIGATE(doc, current_page)
+
+        LET products = (
+            FOR el IN ELEMENTS(doc, "div .item-cell")
+                LET a = ELEMENT(el, "div .item-title")
+                LET price = TO_FLOAT(SUBSTITUTE(SUBSTITUTE(TRIM(INNER_TEXT(ELEMENT(el, "div .price-current"))), '$', ''), ',', ''))
+                LET available = !ELEMENT_EXISTS(el, "div .item-promo")
+                RETURN {
+                    name: INNER_TEXT(a),
+                    url: a.attributes.href,
+                    price: price,
+                    price_currency: "USD",
+                    available: available,
+                }
+        )
+        RETURN products
+)
 
 RETURN FLATTEN(results)
 	`
