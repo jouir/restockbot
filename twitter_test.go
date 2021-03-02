@@ -80,24 +80,6 @@ func TestFormatPrice(t *testing.T) {
 	}
 }
 
-/*
-func formatAvailableTweet(shopName string, productName string, productPrice float64, productCurrency string, productURL string, hashtags string) string {
-	// format message
-	formattedPrice := formatPrice(productPrice, productCurrency)
-	message := fmt.Sprintf("%s: %s for %s is available at %s %s", shopName, productName, formattedPrice, productURL, hashtags)
-
-	// truncate tweet if too big
-	if utf8.RuneCountInString(message) > tweetMaxSize {
-		// maximum tweet size - other characters - additional "…" to say product name has been truncated
-		productNameSize := tweetMaxSize - utf8.RuneCountInString(fmt.Sprintf("%s:  for %s is available at %s %s", shopName, formattedPrice, productURL, hashtags)) - 1
-		format := fmt.Sprintf("%%s: %%.%ds… for %%s is available at %%s %%s", productNameSize)
-		message = fmt.Sprintf(format, shopName, productName, formattedPrice, productURL, hashtags)
-	}
-
-	return message
-}
-*/
-
 func TestFormatAvailableTweet(t *testing.T) {
 	tests := []struct {
 		shopName        string
