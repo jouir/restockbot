@@ -22,20 +22,15 @@ Follow [this procedure](https://github.com/jouir/twitter-login) to generate all 
 * `access_token`
 * `access_token_secret`
 
-## Installation
+## Compilation
+
+### With pre-built binaries
 
 Download the latest [release](https://github.com/jouir/restockbot/releases).
 
 Ensure checksums are identical.
 
-Then execute the binary:
-
-```
-./restockbot -version
-./restockbot -help
-```
-
-## Compilation
+### With make
 
 Clone the repository:
 ```
@@ -60,6 +55,12 @@ Eventually remove produced binaries with:
 make clean
 ```
 
+### With Docker
+
+```
+docker image build -t restockbot:$(cat VERSION) .
+```
+
 ## Configuration
 
 Default file is `restockbot.json` in the current directory. The file name can be passed with the `-config` argument.
@@ -76,6 +77,20 @@ Options:
 * `include_regex` (optional): include products with a name matching this regexp
 * `exclude_regex` (optional): exclude products with a name matching this regexp
 * `browser_address` (optional): set headless browser address (ex: `http://127.0.0.1:9222`)
+
+## Usage
+
+### With binary
+
+```
+restockbot -help
+```
+
+### With Docker
+
+```
+docker run -it --name restockbot --rm --link chromium:chromium -v $(pwd):/root/ restockbot:$(cat VERSION) restockbot -help
+```
 
 ## How to contribute
 
