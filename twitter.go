@@ -161,7 +161,7 @@ func (c *TwitterNotifier) NotifyWhenNotAvailable(productURL string, duration tim
 	}
 
 	// format message
-	message := fmt.Sprintf("And it's over (%s)", duration)
+	message := fmt.Sprintf("And it's gone (%s)", duration)
 
 	// close thread on twitter
 	_, err := c.replyToTweet(tweet.TweetID, message)
