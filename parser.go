@@ -137,6 +137,8 @@ func createQuery(shopName string, url string) (string, error) {
 		return createQueryForMediamarktCh(url), nil
 	case "newegg.com":
 		return createQueryForNewegg(url), nil
+	case "steg-electronics.ch":
+		return createQueryForStegElectronics(url), nil
 	case "topachat.com":
 		return createQueryForTopachat(url), nil
 	default:
@@ -419,6 +421,43 @@ LET results = (
                     price: price,
                     price_currency: "USD",
                     available: available,
+                }
+        )
+        RETURN products
+)
+
+RETURN FLATTEN(results)
+	`
+	return q
+}
+
+func createQueryForStegElectronics(url string) string {
+	q := `
+LET first_page = '` + url + `'
+LET doc = DOCUMENT(first_page, { driver: "cdp" })
+
+LET next_pages = (
+    FOR next_page IN ELEMENTS(doc, "div#pagination a.current-pages")
+        RETURN next_page.attributes.href
+)
+
+LET pages = SORTED_UNIQUE(APPEND(REMOVE_VALUE(next_pages, '#'), first_page))
+
+LET results = (
+    FOR page IN pages
+        NAVIGATE(doc, page)
+        LET products = (
+            FOR el IN ELEMENTS(doc, "article.product-list-container div.productGridElement")
+                LET link = ELEMENT(el, "h2 a")
+                LET shipment = ELEMENT(el, "div.availabilityInfo a .iconShipment").attributes.style.color != "#BFBFBF"
+                LET pickup = ELEMENT(el, "div.availabilityInfo a .iconPickup").attributes.style.color != "#BFBFBF"
+                LET price = TO_FLOAT(SUBSTITUTE(INNER_TEXT(ELEMENT(el, "div.generalPrice")), "'", ""))
+                RETURN {
+                    name: link.attributes.title,
+                    url: link.attributes.href,
+                    available: shipment OR pickup,
+                    price: price,
+                    price_currency: "CHF",
                 }
         )
         RETURN products
