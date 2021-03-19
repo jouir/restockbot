@@ -141,6 +141,8 @@ func createQuery(shopName string, url string) (string, error) {
 		return createQueryForStegElectronics(url), nil
 	case "topachat.com":
 		return createQueryForTopachat(url), nil
+	case "vsgamers.es":
+		return createQueryForVersusGamers(url), nil
 	default:
 		return "", fmt.Errorf("shop %s not supported", shopName)
 	}
@@ -464,6 +466,40 @@ LET results = (
 )
 
 RETURN FLATTEN(results)
+	`
+	return q
+}
+
+/*
+* TODO:
+*  - pagination (relies on scroll down move to feed the "div.vs-product-list" element with new items)
+*  - remove products with "name: null"
+ */
+func createQueryForVersusGamers(url string) string {
+	q := `
+LET first_page = '` + url + `'
+LET doc = DOCUMENT(first_page, { driver: "cdp" })
+LET base_url = 'https://www.vsgamers.es'
+
+FOR el IN ELEMENTS(doc, "div.vs-product-list div.vs-product-list-item")
+    LET link = ELEMENT(el, "a")
+    LET hasLink = link != null ? true : false
+    LET title = ELEMENT(el, "div.vs-product-card-title")
+    LET name = title != null ? INNER_TEXT(title) : null
+    LET url = hasLink ? base_url + link.attributes.href : null
+
+    LET available = ELEMENT(el, "div.vs-product-card-action button") != null
+
+    LET price_element = ELEMENT(el, "div.vs-product-card-prices span")
+    LET price = price_element != null ? TO_FLOAT(price_element.attributes."data-price") : 0
+    LET price_currency = "EUR"
+    RETURN {
+        name: name,
+        url: url,
+        available: available,
+        price: price,
+        price_currency: price_currency,
+    }
 	`
 	return q
 }
