@@ -14,15 +14,20 @@ import (
 	"github.com/MontFerret/ferret/pkg/drivers/http"
 )
 
-// Parser structure to handle websites parsing logic
-type Parser struct {
+// URLParser structure to handle websites parsing logic
+type URLParser struct {
+	url          string
 	includeRegex *regexp.Regexp
 	excludeRegex *regexp.Regexp
 	ctx          context.Context
 }
 
-// NewParser to create a new Parser instance
-func NewParser(browserAddress string, includeRegex string, excludeRegex string) (*Parser, error) {
+func (p *URLParser) String() string {
+	return fmt.Sprintf("URLParser<%s>", p.url)
+}
+
+// NewURLParser to create a new URLParser instance
+func NewURLParser(url string, browserAddress string, includeRegex string, excludeRegex string) (*URLParser, error) {
 	var err error
 	var includeRegexCompiled, excludeRegexCompiled *regexp.Regexp
 
@@ -47,7 +52,8 @@ func NewParser(browserAddress string, includeRegex string, excludeRegex string) 
 	ctx = drivers.WithContext(ctx, cdp.NewDriver(cdp.WithAddress(browserAddress)))
 	ctx = drivers.WithContext(ctx, http.NewDriver(), drivers.AsDefault())
 
-	return &Parser{
+	return &URLParser{
+		url:          url,
 		includeRegex: includeRegexCompiled,
 		excludeRegex: excludeRegexCompiled,
 		ctx:          ctx,
@@ -56,13 +62,13 @@ func NewParser(browserAddress string, includeRegex string, excludeRegex string) 
 
 // Parse a website to return list of products
 // TODO: redirect output to logger
-func (p *Parser) Parse(url string) ([]*Product, error) {
-	shopName, err := ExtractShopName(url)
+func (p *URLParser) Parse() ([]*Product, error) {
+	shopName, err := ExtractShopName(p.url)
 	if err != nil {
 		return nil, err
 	}
 
-	query, err := createQuery(shopName, url)
+	query, err := createQuery(shopName, p.url)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +96,7 @@ func (p *Parser) Parse(url string) ([]*Product, error) {
 }
 
 // filterInclusive returns a list of products matching the include regex
-func (p *Parser) filterInclusive(products []*Product) []*Product {
+func (p *URLParser) filterInclusive(products []*Product) []*Product {
 	var filtered []*Product
 	if p.includeRegex != nil {
 		for _, product := range products {
@@ -107,7 +113,7 @@ func (p *Parser) filterInclusive(products []*Product) []*Product {
 }
 
 // filterExclusive returns a list of products that don't match the exclude regex
-func (p *Parser) filterExclusive(products []*Product) []*Product {
+func (p *URLParser) filterExclusive(products []*Product) []*Product {
 	var filtered []*Product
 	if p.excludeRegex != nil {
 		for _, product := range products {

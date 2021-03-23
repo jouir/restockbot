@@ -18,7 +18,7 @@ func TestFilterInclusive(t *testing.T) {
 
 	for i, tc := range tests {
 		t.Run(fmt.Sprintf("TestFilterInclusive#%d", i), func(t *testing.T) {
-			p, err := NewParser("", tc.regex, "")
+			p, err := NewURLParser("", "", tc.regex, "")
 			if err != nil {
 				t.Errorf("failed to initialize parser: %s", err)
 			} else {
@@ -58,7 +58,7 @@ func TestFilterExclusive(t *testing.T) {
 
 	for i, tc := range tests {
 		t.Run(fmt.Sprintf("TestFilterExclusive#%d", i), func(t *testing.T) {
-			p, err := NewParser("", "", tc.regex)
+			p, err := NewURLParser("", "", "", tc.regex)
 			if err != nil {
 				t.Errorf("failed to initialize parser: %s", err)
 			} else {

@@ -99,12 +99,6 @@ func main() {
 		defer removePid(*pidFile)
 	}
 
-	// create parser
-	parser, err := NewParser(config.BrowserAddress, config.IncludeRegex, config.ExcludeRegex)
-	if err != nil {
-		log.Fatalf("could not create parser: %s", err)
-	}
-
 	// connect to the database
 	db, err := gorm.Open(sqlite.Open(*databaseFileName), &gorm.Config{})
 	if err != nil {
@@ -145,128 +139,134 @@ func main() {
 		}
 	}
 
-	// crawl shops asynchronously
+	// parse asynchronously
 	var wg sync.WaitGroup
 	jobsCount := 0
+
+	// start with URLs
 	for shopName, shopLinks := range ShopsMap {
-		if jobsCount < *workers {
-			wg.Add(1)
-			jobsCount++
-			go crawlShop(parser, shopName, shopLinks, notifiers, db, &wg)
-		} else {
-			log.Debugf("waiting for intermediate jobs to end")
-			wg.Wait()
-			jobsCount = 0
+
+		// read shop from database or create it
+		var shop Shop
+		trx := db.Where(Shop{Name: shopName}).FirstOrCreate(&shop)
+		if trx.Error != nil {
+			log.Errorf("cannot create or select shop %s to/from database: %s", shopName, trx.Error)
+			continue
+		}
+
+		for _, link := range shopLinks {
+			if jobsCount < *workers {
+				// create parser
+				parser, err := NewURLParser(link, config.BrowserAddress, config.IncludeRegex, config.ExcludeRegex)
+				if err != nil {
+					log.Warnf("could not create URL parser for %s", link)
+					continue
+				}
+				wg.Add(1)
+				jobsCount++
+				go handleProducts(shop, parser, notifiers, db, &wg)
+			} else {
+				log.Debugf("waiting for intermediate jobs to end")
+				wg.Wait()
+				jobsCount = 0
+			}
 		}
 	}
+
 	log.Debugf("waiting for all jobs to end")
 	wg.Wait()
 }
 
-// For a given shop, fetch and parse all the dependent URLs, then eventually send notifications
-func crawlShop(parser *Parser, shopName string, shopLinks []string, notifiers []Notifier, db *gorm.DB, wg *sync.WaitGroup) {
+// For a given shop, fetch and parse its URL, then eventually send notifications
+func handleProducts(shop Shop, parser *URLParser, notifiers []Notifier, db *gorm.DB, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Debugf("parsing shop %s", shopName)
 
-	// read shop from database or create it
-	var shop Shop
-	trx := db.Where(Shop{Name: shopName}).FirstOrCreate(&shop)
-	if trx.Error != nil {
-		log.Errorf("cannot create or select shop %s to/from database: %s", shopName, trx.Error)
+	log.Debugf("parsing with %s", parser)
+	products, err := parser.Parse()
+	if err != nil {
+		log.Warnf("cannot parse: %s", err)
 		return
 	}
+	log.Debugf("parsed")
 
-	for _, link := range shopLinks {
+	// upsert products to database
+	for _, product := range products {
 
-		log.Debugf("parsing url %s", link)
-		products, err := parser.Parse(link)
-		if err != nil {
-			log.Warnf("cannot parse %s: %s", link, err)
+		log.Debugf("detected product %+v", product)
+
+		if !product.IsValid() {
+			log.Warnf("parsed malformatted product: %+v", product)
 			continue
 		}
-		log.Debugf("url %s parsed", link)
 
-		// upsert products to database
-		for _, product := range products {
+		// check if product is already in the database
+		// sometimes new products are detected on the website, directly available, without reference in the database
+		// the bot has to send a notification instead of blindly creating it in the database and check availability afterwards
+		var count int64
+		trx := db.Model(&Product{}).Where(Product{URL: product.URL}).Count(&count)
+		if trx.Error != nil {
+			log.Warnf("cannot see if product %s already exists in the database: %s", product.Name, trx.Error)
+			continue
+		}
 
-			log.Debugf("detected product %+v", product)
+		// fetch product from database or create it if it doesn't exist
+		var dbProduct Product
+		trx = db.Where(Product{URL: product.URL}).Attrs(Product{Name: product.Name, Shop: shop, Price: product.Price, PriceCurrency: product.PriceCurrency, Available: product.Available}).FirstOrCreate(&dbProduct)
+		if trx.Error != nil {
+			log.Warnf("cannot fetch product %s from database: %s", product.Name, trx.Error)
+			continue
+		}
+		log.Debugf("product %s found in database", dbProduct.Name)
 
-			if !product.IsValid() {
-				log.Warnf("parsed malformatted product: %+v", product)
-				continue
-			}
+		// detect availability change
+		duration := time.Now().Sub(dbProduct.UpdatedAt).Truncate(time.Second)
+		createThread := false
+		closeThread := false
 
-			// check if product is already in the database
-			// sometimes new products are detected on the website, directly available, without reference in the database
-			// the bot has to send a notification instead of blindly creating it in the database and check availability afterwards
-			var count int64
-			trx = db.Model(&Product{}).Where(Product{URL: product.URL}).Count(&count)
-			if trx.Error != nil {
-				log.Warnf("cannot see if product %s already exists in the database: %s", product.Name, trx.Error)
-				continue
-			}
+		// non-existing product directly available
+		if count == 0 && product.Available {
+			log.Infof("product %s on %s is now available", product.Name, shop.Name)
+			createThread = true
+		}
 
-			// fetch product from database or create it if it doesn't exist
-			var dbProduct Product
-			trx = db.Where(Product{URL: product.URL}).Attrs(Product{Name: product.Name, Shop: shop, Price: product.Price, PriceCurrency: product.PriceCurrency, Available: product.Available}).FirstOrCreate(&dbProduct)
-			if trx.Error != nil {
-				log.Warnf("cannot fetch product %s from database: %s", product.Name, trx.Error)
-				continue
-			}
-			log.Debugf("product %s found in database", dbProduct.Name)
-
-			// detect availability change
-			duration := time.Now().Sub(dbProduct.UpdatedAt).Truncate(time.Second)
-			createThread := false
-			closeThread := false
-
-			// non-existing product directly available
-			if count == 0 && product.Available {
-				log.Infof("product %s on %s is now available", product.Name, shopName)
+		// existing product with availability change
+		if count > 0 && (dbProduct.Available != product.Available) {
+			if product.Available {
+				log.Infof("product %s on %s is now available", product.Name, shop.Name)
 				createThread = true
+			} else {
+				log.Infof("product %s on %s is not available anymore", product.Name, shop.Name)
+				closeThread = true
 			}
+		}
 
-			// existing product with availability change
-			if count > 0 && (dbProduct.Available != product.Available) {
-				if product.Available {
-					log.Infof("product %s on %s is now available", product.Name, shopName)
-					createThread = true
-				} else {
-					log.Infof("product %s on %s is not available anymore", product.Name, shopName)
-					closeThread = true
+		// update product in database before sending notification
+		// if there is a database failure, we don't want the bot to send a notification at each run
+		if dbProduct.ToMerge(product) {
+			dbProduct.Merge(product)
+			trx = db.Save(&dbProduct)
+			if trx.Error != nil {
+				log.Warnf("cannot save product %s to database: %s", dbProduct.Name, trx.Error)
+				continue
+			}
+			log.Debugf("product %s updated in database", dbProduct.Name)
+		}
+
+		// send notifications
+		if createThread {
+			for _, notifier := range notifiers {
+				if err := notifier.NotifyWhenAvailable(shop.Name, dbProduct.Name, dbProduct.Price, dbProduct.PriceCurrency, dbProduct.URL); err != nil {
+					log.Errorf("%s", err)
 				}
 			}
-
-			// update product in database before sending notification
-			// if there is a database failure, we don't want the bot to send a notification at each run
-			if dbProduct.ToMerge(product) {
-				dbProduct.Merge(product)
-				trx = db.Save(&dbProduct)
-				if trx.Error != nil {
-					log.Warnf("cannot save product %s to database: %s", dbProduct.Name, trx.Error)
-					continue
-				}
-				log.Debugf("product %s updated in database", dbProduct.Name)
-			}
-
-			// send notifications
-			if createThread {
-				for _, notifier := range notifiers {
-					if err := notifier.NotifyWhenAvailable(shop.Name, dbProduct.Name, dbProduct.Price, dbProduct.PriceCurrency, dbProduct.URL); err != nil {
-						log.Errorf("%s", err)
-					}
-				}
-			} else if closeThread {
-				for _, notifier := range notifiers {
-					if err := notifier.NotifyWhenNotAvailable(dbProduct.URL, duration); err != nil {
-						log.Errorf("%s", err)
-					}
+		} else if closeThread {
+			for _, notifier := range notifiers {
+				if err := notifier.NotifyWhenNotAvailable(dbProduct.URL, duration); err != nil {
+					log.Errorf("%s", err)
 				}
 			}
 		}
 	}
-
-	log.Debugf("shop %s parsed", shopName)
 }
 
 func showVersion() {
