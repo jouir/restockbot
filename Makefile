@@ -13,5 +13,8 @@ build:
 release:
 	go build -ldflags "${LDFLAGS}" -o bin/restockbot-${APPVERSION}-${PLATFORM}-${ARCH} *.go
 
+test:
+	go test
+
 clean:
 	rm -rf bin

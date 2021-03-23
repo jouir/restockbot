@@ -9,6 +9,7 @@ import (
 // Config to store JSON configuration
 type Config struct {
 	TwitterConfig  `json:"twitter"`
+	TelegramConfig `json:"telegram"`
 	URLs           []string `json:"urls"`
 	IncludeRegex   string   `json:"include_regex"`
 	ExcludeRegex   string   `json:"exclude_regex"`
@@ -22,6 +23,13 @@ type TwitterConfig struct {
 	AccessToken       string              `json:"access_token"`
 	AccessTokenSecret string              `json:"access_token_secret"`
 	Hashtags          []map[string]string `json:"hashtags"`
+}
+
+// TelegramConfig to store Telegram API key
+type TelegramConfig struct {
+	Token       string `json:"token"`
+	ChatID      int64  `json:"chat_id"`
+	ChannelName string `json:"channel_name"`
 }
 
 // NewConfig creates a Config struct
@@ -51,4 +59,9 @@ func (c *Config) Read(file string) error {
 // HasTwitter returns true when Twitter has been configured
 func (c *Config) HasTwitter() bool {
 	return (c.TwitterConfig.AccessToken != "" && c.TwitterConfig.AccessTokenSecret != "" && c.TwitterConfig.ConsumerKey != "" && c.TwitterConfig.ConsumerSecret != "")
+}
+
+// HasTelegram returns true when Telegram has been configured
+func (c *Config) HasTelegram() bool {
+	return c.TelegramConfig.Token != "" && (c.TelegramConfig.ChatID != 0 || c.TelegramConfig.ChannelName != "")
 }

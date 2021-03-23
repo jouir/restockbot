@@ -94,23 +94,10 @@ func (c *TwitterNotifier) buildHashtags(productName string) string {
 	return ""
 }
 
-// formatPrice using internationalization rules
-// euro sign is placed after the value
-// default the currency, or symbol if applicable, is placed before the value
-func formatPrice(value float64, currency string) string {
-	switch {
-	case currency == "EUR":
-		return fmt.Sprintf("%.2f€", value)
-	case currency == "USD":
-		return fmt.Sprintf("$%.2f", value)
-	default:
-		return fmt.Sprintf("%s%.2f", currency, value)
-	}
-}
-
 // NotifyWhenAvailable create a Twitter status for announcing that a product is available
 // implements the Notifier interface
 func (c *TwitterNotifier) NotifyWhenAvailable(shopName string, productName string, productPrice float64, productCurrency string, productURL string) error {
+	// TODO: check if message exists in the database to avoid flood
 	hashtags := c.buildHashtags(productName)
 	message := formatAvailableTweet(shopName, productName, productPrice, productCurrency, productURL, hashtags)
 	// create thread

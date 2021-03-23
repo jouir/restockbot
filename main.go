@@ -125,6 +125,13 @@ func main() {
 			}
 			notifiers = append(notifiers, twitterNotifier)
 		}
+		if config.HasTelegram() {
+			telegramNotifier, err := NewTelegramNotifier(&config.TelegramConfig, db)
+			if err != nil {
+				log.Fatalf("cannot create telegram client: %s", err)
+			}
+			notifiers = append(notifiers, telegramNotifier)
+		}
 	}
 
 	// Group links by shop

@@ -22,6 +22,47 @@ Follow [this procedure](https://github.com/jouir/twitter-login) to generate all 
 * `access_token`
 * `access_token_secret`
 
+### Telegram (optional)
+
+Follow [this procedure](https://core.telegram.org/bots#3-how-do-i-create-a-bot) to create a bot `token`.
+
+Then you have two possible destinations to send messages:
+* channel using a `channel_name` (string)
+* chat using a `chat_id` (integer)
+
+For testing purpose, you should store the token in a variable for next sections:
+```
+read -s TOKEN
+```
+
+#### Chat
+
+To get the chat identifier, you can send a message to your bot then read messages using the API:
+
+```
+curl -s -XGET "https://api.telegram.org/bot${TOKEN}/getUpdates" | jq -r ".result[].message.chat.id"
+```
+
+You can test to send messages to a chat with:
+
+```
+read CHAT_ID
+curl -s -XGET "https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=hello" | jq
+```
+
+#### Channel
+
+Public channel names can be used (example: `@mychannel`). For private channels, you should use a `chat_id` instead.
+
+You can test to send messages to a channel with:
+
+```
+read CHANNEL_NAME
+curl -s -XGET "https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHANNEL_NAME}&text=hello" | jq
+```
+
+Don't forget to prefix the channel name with an `@`.
+
 ## Compilation
 
 ### With pre-built binaries
@@ -74,6 +115,10 @@ Options:
     * `access_token`: authentication token generated for your Twitter account
     * `access_token_secret`: authentication token secret generated for your Twitter account
     * `hashtags`: list of key/value used to append hashtags to each tweet. Key is the pattern to match in the product name, value is the string to append to the tweet. For example, `{"twitter": {"hashtags": [{"rtx 3090": "#nvidia #rtx3090"}]}}` will detect `rtx 3090` to append `#nvidia #rtx3090` at the end of the tweet.
+* `telegram` (optional):
+    * `channel_name`: send message to a channel (ex: `@channel`)
+    * `chat_id`: send message to a chat (ex: `1234`)
+    * `token`: key returned by BotFather
 * `include_regex` (optional): include products with a name matching this regexp
 * `exclude_regex` (optional): exclude products with a name matching this regexp
 * `browser_address` (optional): set headless browser address (ex: `http://127.0.0.1:9222`)
