@@ -56,7 +56,12 @@ func (n *TelegramNotifier) NotifyWhenAvailable(shopName string, productName stri
 
 	// send message to telegram
 	formattedPrice := formatPrice(productPrice, productCurrency)
-	message := fmt.Sprintf("🟢 %s: %s for %s is available at %s", shopName, productName, formattedPrice, productURL)
+	rawMessage := `*Name:* %s
+*Retailer:* %s
+*Price:* %s
+*URL*: [go to website](%s)
+*Date/Time:* %s`
+	message := fmt.Sprintf(rawMessage, productName, shopName, formattedPrice, productURL, time.Now().UTC().Format("2006-01-02 15:04:05 (-0700)"))
 	messageID, err := n.sendMessage(message, 0)
 	if err != nil {
 		return err
@@ -88,7 +93,7 @@ func (n *TelegramNotifier) NotifyWhenNotAvailable(productURL string, duration ti
 	}
 
 	// format message
-	text := fmt.Sprintf("🔴 And it's gone (%s)", duration)
+	text := fmt.Sprintf("And it's gone (%s)", duration)
 
 	// send reply on telegram
 	_, err := n.sendMessage(text, m.MessageID)
@@ -115,6 +120,7 @@ func (n *TelegramNotifier) sendMessage(text string, reply int) (int, error) {
 		request = telegram.NewMessageToChannel(n.channelName, text)
 	}
 	request.DisableWebPagePreview = true
+	request.ParseMode = telegram.ModeMarkdown
 
 	if reply != 0 {
 		request.ReplyToMessageID = reply
