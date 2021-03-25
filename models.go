@@ -12,8 +12,8 @@ type Product struct {
 	Price         float64 `gorm:"not null" json:"price"`
 	PriceCurrency string  `gorm:"not null" json:"price_currency"`
 	Available     bool    `gorm:"not null;default:false" json:"available"`
-	ShopID        uint
-	Shop          Shop
+	ShopID        uint    `json:"shop_id"`
+	Shop          Shop    `json:"shop"`
 }
 
 // Equal compares a database product to another product
@@ -41,5 +41,5 @@ func (p *Product) ToMerge(o *Product) bool {
 // Shop represents a retailer website
 type Shop struct {
 	ID   uint   `gorm:"primaryKey"`
-	Name string `gorm:"unique"`
+	Name string `gorm:"unique" json:"name"`
 }

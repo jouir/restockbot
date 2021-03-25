@@ -52,6 +52,7 @@ func main() {
 	workers := flag.Int("workers", 1, "number of workers for parsing shops")
 	pidFile := flag.String("pid-file", "", "write process ID to this file to disable concurrent executions")
 	pidWaitTimeout := flag.Int("pid-wait-timeout", 0, "seconds to wait before giving up when another instance is running")
+	api := flag.Bool("api", false, "Start the HTTP API")
 
 	flag.Parse()
 
@@ -112,6 +113,11 @@ func main() {
 	}
 	if err := db.AutoMigrate(&Shop{}); err != nil {
 		log.Fatalf("cannot create shops table")
+	}
+
+	// start the api
+	if *api {
+		log.Fatal(StartAPI(db, config.ApiConfig))
 	}
 
 	// register notifiers

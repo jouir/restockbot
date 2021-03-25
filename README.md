@@ -122,6 +122,10 @@ Options:
 * `include_regex` (optional): include products with a name matching this regexp
 * `exclude_regex` (optional): exclude products with a name matching this regexp
 * `browser_address` (optional): set headless browser address (ex: `http://127.0.0.1:9222`)
+* `api` (optional):
+    * `address`: listen address for the REST API (ex: `127.0.0.1:8000`)
+    * `cert_file` (optional): use SSL and use this certificate file
+    * `key_file` (optional): use SSL and use this key file
 
 ## Usage
 
@@ -136,6 +140,12 @@ restockbot -help
 ```
 docker run -it --name restockbot --rm --link chromium:chromium -v $(pwd):/root/ restockbot:$(cat VERSION) restockbot -help
 ```
+
+## Execution modes
+
+There are two modes:
+* **default**: without special argument, the bot parses websites and manage its own database
+* **API**: using the `-api` argument, the bot starts the HTTP API to expose data from the database
 
 ## How to contribute
 

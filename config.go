@@ -10,6 +10,7 @@ import (
 type Config struct {
 	TwitterConfig  `json:"twitter"`
 	TelegramConfig `json:"telegram"`
+	ApiConfig      `json:"api"`
 	URLs           []string `json:"urls"`
 	IncludeRegex   string   `json:"include_regex"`
 	ExcludeRegex   string   `json:"exclude_regex"`
@@ -30,6 +31,13 @@ type TelegramConfig struct {
 	Token       string `json:"token"`
 	ChatID      int64  `json:"chat_id"`
 	ChannelName string `json:"channel_name"`
+}
+
+// ApiConfig to store HTTP API configuration
+type ApiConfig struct {
+	Address  string `json:"address"`
+	Certfile string `json:"cert_file"`
+	Keyfile  string `json:"key_file"`
 }
 
 // NewConfig creates a Config struct
