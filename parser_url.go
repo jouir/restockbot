@@ -22,6 +22,8 @@ type URLParser struct {
 	ctx          context.Context
 }
 
+// String to print URLParser
+// Implements the Parser interface
 func (p *URLParser) String() string {
 	return fmt.Sprintf("URLParser<%s>", p.url)
 }
@@ -61,6 +63,7 @@ func NewURLParser(url string, browserAddress string, includeRegex string, exclud
 }
 
 // Parse a website to return list of products
+// Implements Parser interface
 // TODO: redirect output to logger
 func (p *URLParser) Parse() ([]*Product, error) {
 	shopName, err := ExtractShopName(p.url)
@@ -89,44 +92,10 @@ func (p *URLParser) Parse() ([]*Product, error) {
 	}
 
 	// apply filters
-	products = p.filterInclusive(products)
-	products = p.filterExclusive(products)
+	products = filterInclusive(p.includeRegex, products)
+	products = filterExclusive(p.excludeRegex, products)
 
 	return products, nil
-}
-
-// filterInclusive returns a list of products matching the include regex
-func (p *URLParser) filterInclusive(products []*Product) []*Product {
-	var filtered []*Product
-	if p.includeRegex != nil {
-		for _, product := range products {
-			if p.includeRegex.MatchString(product.Name) {
-				log.Debugf("product %s included because it matches the include regex", product.Name)
-				filtered = append(filtered, product)
-			} else {
-				log.Debugf("product %s excluded because it does not match the include regex", product.Name)
-			}
-		}
-		return filtered
-	}
-	return products
-}
-
-// filterExclusive returns a list of products that don't match the exclude regex
-func (p *URLParser) filterExclusive(products []*Product) []*Product {
-	var filtered []*Product
-	if p.excludeRegex != nil {
-		for _, product := range products {
-			if p.excludeRegex.MatchString(product.Name) {
-				log.Debugf("product %s excluded because it matches the exclude regex", product.Name)
-			} else {
-				log.Debugf("product %s included because it does not match the exclude regex", product.Name)
-				filtered = append(filtered, product)
-			}
-		}
-		return filtered
-	}
-	return products
 }
 
 func createQuery(shopName string, url string) (string, error) {

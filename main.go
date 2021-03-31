@@ -140,15 +140,62 @@ func main() {
 		}
 	}
 
-	// Group links by shop
-	ShopsMap := make(map[string][]string)
+	// create shops and parsers
+	var shop Shop
+	parsers := []Parser{}
 
-	for _, link := range config.URLs {
-		name, err := ExtractShopName(link)
-		if err != nil {
-			log.Warnf("cannot extract shop name from %s: %s", link, err)
-		} else {
-			ShopsMap[name] = append(ShopsMap[name], link)
+	if config.HasURLs() {
+		// group links by shop
+		ShopsMap := make(map[string][]string)
+
+		for _, link := range config.URLs {
+			name, err := ExtractShopName(link)
+			if err != nil {
+				log.Warnf("cannot extract shop name from %s: %s", link, err)
+			} else {
+				ShopsMap[name] = append(ShopsMap[name], link)
+			}
+		}
+
+		for shopName, shopLinks := range ShopsMap {
+			// read shop from database or create it
+			trx := db.Where(Shop{Name: shopName}).FirstOrCreate(&shop)
+			if trx.Error != nil {
+				log.Errorf("cannot create or select shop %s to/from database: %s", shopName, trx.Error)
+				continue
+			}
+
+			for _, link := range shopLinks {
+				// create parser
+				parser, err := NewURLParser(link, config.BrowserAddress, config.IncludeRegex, config.ExcludeRegex)
+				if err != nil {
+					log.Warnf("could not create URL parser for %s", link)
+					continue
+				}
+				parsers = append(parsers, parser)
+				log.Debugf("parser %s registered", parser)
+			}
+		}
+	}
+
+	if config.HasAmazon() {
+		for _, marketplace := range config.AmazonConfig.Marketplaces {
+			// create parser
+			parser, err := NewAmazonParser(marketplace.Name, marketplace.PartnerTag, config.AmazonConfig.AccessKey, config.AmazonConfig.SecretKey, config.AmazonConfig.Searches, config.IncludeRegex, config.ExcludeRegex, config.AmazonConfig.AmazonFulfilled, config.AmazonConfig.AmazonMerchant, config.AmazonConfig.AffiliateLinks)
+			if err != nil {
+				log.Warnf("could not create Amazon parser: %s", err)
+				continue
+			}
+
+			// read shop from database or create it
+			trx := db.Where(Shop{Name: parser.ShopName()}).FirstOrCreate(&shop)
+			if trx.Error != nil {
+				log.Errorf("cannot create or select shop %s to/from database: %s", parser.ShopName(), trx.Error)
+				continue
+			}
+
+			parsers = append(parsers, parser)
+			log.Debugf("parser %s registered", parser)
 		}
 	}
 
@@ -156,33 +203,15 @@ func main() {
 	var wg sync.WaitGroup
 	jobsCount := 0
 
-	// start with URLs
-	for shopName, shopLinks := range ShopsMap {
-
-		// read shop from database or create it
-		var shop Shop
-		trx := db.Where(Shop{Name: shopName}).FirstOrCreate(&shop)
-		if trx.Error != nil {
-			log.Errorf("cannot create or select shop %s to/from database: %s", shopName, trx.Error)
-			continue
-		}
-
-		for _, link := range shopLinks {
-			if jobsCount < *workers {
-				// create parser
-				parser, err := NewURLParser(link, config.BrowserAddress, config.IncludeRegex, config.ExcludeRegex)
-				if err != nil {
-					log.Warnf("could not create URL parser for %s", link)
-					continue
-				}
-				wg.Add(1)
-				jobsCount++
-				go handleProducts(shop, parser, notifiers, db, &wg)
-			} else {
-				log.Debugf("waiting for intermediate jobs to end")
-				wg.Wait()
-				jobsCount = 0
-			}
+	for _, parser := range parsers {
+		if jobsCount < *workers {
+			wg.Add(1)
+			jobsCount++
+			go handleProducts(shop, parser, notifiers, db, &wg)
+		} else {
+			log.Debugf("waiting for intermediate jobs to end")
+			wg.Wait()
+			jobsCount = 0
 		}
 	}
 
@@ -190,8 +219,8 @@ func main() {
 	wg.Wait()
 }
 
-// For a given shop, fetch and parse its URL, then eventually send notifications
-func handleProducts(shop Shop, parser *URLParser, notifiers []Notifier, db *gorm.DB, wg *sync.WaitGroup) {
+// For a given shop, use the parser to return a list of products, then eventually send notifications
+func handleProducts(shop Shop, parser Parser, notifiers []Notifier, db *gorm.DB, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	log.Debugf("parsing with %s", parser)

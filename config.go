@@ -11,6 +11,7 @@ type Config struct {
 	TwitterConfig  `json:"twitter"`
 	TelegramConfig `json:"telegram"`
 	ApiConfig      `json:"api"`
+	AmazonConfig   `json:"amazon"`
 	URLs           []string `json:"urls"`
 	IncludeRegex   string   `json:"include_regex"`
 	ExcludeRegex   string   `json:"exclude_regex"`
@@ -38,6 +39,20 @@ type ApiConfig struct {
 	Address  string `json:"address"`
 	Certfile string `json:"cert_file"`
 	Keyfile  string `json:"key_file"`
+}
+
+// AmazonConfig to store Amazon API secrets
+type AmazonConfig struct {
+	Searches     []string `json:"searches"`
+	AccessKey    string   `json:"access_key"`
+	SecretKey    string   `json:"secret_key"`
+	Marketplaces []struct {
+		Name       string `json:"name"`
+		PartnerTag string `json:"partner_tag"`
+	} `json:"marketplaces"`
+	AmazonFulfilled bool `json:"amazon_fulfilled"`
+	AmazonMerchant  bool `json:"amazon_merchant"`
+	AffiliateLinks  bool `json:"affiliate_links"`
 }
 
 // NewConfig creates a Config struct
@@ -72,4 +87,23 @@ func (c *Config) HasTwitter() bool {
 // HasTelegram returns true when Telegram has been configured
 func (c *Config) HasTelegram() bool {
 	return c.TelegramConfig.Token != "" && (c.TelegramConfig.ChatID != 0 || c.TelegramConfig.ChannelName != "")
+}
+
+// HasURL returns true when list of URLS has been configured
+func (c *Config) HasURLs() bool {
+	return len(c.URLs) > 0
+}
+
+// HasAmazon returns true when Amazon has been configured
+func (c *Config) HasAmazon() bool {
+	var hasKeys, hasSearches, hasMarketplaces bool
+	hasKeys = c.AmazonConfig.AccessKey != "" && c.AmazonConfig.SecretKey != ""
+	hasSearches = len(c.AmazonConfig.Searches) > 0
+	for _, marketplace := range c.AmazonConfig.Marketplaces {
+		if marketplace.PartnerTag != "" && marketplace.Name != "" {
+			hasMarketplaces = true
+			break
+		}
+	}
+	return hasKeys && hasSearches && hasMarketplaces
 }

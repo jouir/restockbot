@@ -23,7 +23,13 @@ func (p *Product) Equal(other *Product) bool {
 
 // IsValid returns true when a Product has all required values
 func (p *Product) IsValid() bool {
-	return p.Name != "" && p.URL != "" && p.Price != 0 && p.PriceCurrency != ""
+	if p.Name == "" || p.URL == "" {
+		return false
+	}
+	if p.Available && p.PriceCurrency == "" {
+		return false
+	}
+	return true
 }
 
 // Merge one product with another
@@ -40,6 +46,6 @@ func (p *Product) ToMerge(o *Product) bool {
 
 // Shop represents a retailer website
 type Shop struct {
-	ID   uint   `gorm:"primaryKey"`
+	ID   uint   `gorm:"primaryKey;autoIncrement"`
 	Name string `gorm:"unique" json:"name"`
 }

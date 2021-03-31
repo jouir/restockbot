@@ -14,6 +14,14 @@ docker run --name chromium --rm -d -p 9222:9222 montferret/chromium
 
 Or get inspired by the [source code](https://github.com/MontFerret/chromium) to run it on your own.
 
+### Amazon (optional)
+
+To access the [Product Advertising API](https://webservices.amazon.com/paapi5/documentation/) and start to notify for Amazon products, you will need to have a valid [Amazon Associates](https://affiliate-program.amazon.com) account in the [Marketplace](https://github.com/spiegel-im-spiegel/pa-api/blob/v0.9.0/marketplace.go#L36) of your choice. You will then be able to retreive your **partner tag**, and the **Marketplace name** obviously.
+
+Once your account has been validated, you can request access to the Product Advertising API (PA API) to retreive your **access key** and your **secret key**.
+
+Ensure you follow the **terms of services** before subscribing to the Amazon Associates program and use the PA API.
+
 ### Twitter (optional)
 
 Follow [this procedure](https://github.com/jouir/twitter-login) to generate all the required settings:
@@ -108,7 +116,15 @@ Default file is `restockbot.json` in the current directory. The file name can be
 
 Options:
 
-* `urls`: list of retailers web pages
+* `urls` (optional): list of retailers web pages
+* `amazon` (optional)
+    * `searches`: list of keywords to search for (ex: `["nvidia rtx", "amd rx"]`)
+    * `access_key`: access key to access the [Product Advertising API](https://webservices.amazon.com/paapi5/documentation/)
+    * `secret_key`: secret key to access the [Product Advertising API](https://webservices.amazon.com/paapi5/documentation/)
+    * `marketplaces`: list of documents containing a Marketplace `name` and a `partner_tag` (ex: `{"marketplaces":[{"name": "www.amazon.com", "partner_tag": "mytag-01"}]}`)
+    * `amazon_fulfilled`: include only products packaged by Amazon
+    * `amazon_merchant`: include only products sold by Amazon
+    * `affiliate_links`: generate affiliate links with the partner tag
 * `twitter` (optional):
     * `consumer_key`: API key of your Twitter application
     * `consumer_secret`: API secret of your Twitter application

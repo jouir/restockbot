@@ -16,3 +16,13 @@ func ExtractShopName(link string) (name string, err error) {
 	re := regexp.MustCompile(`^www\.`)
 	return strings.ToLower(re.ReplaceAllString(u.Hostname(), "")), nil
 }
+
+// ContainsString returns true when string is found in the array of strings
+func ContainsString(arr []string, str string) bool {
+	for _, elem := range arr {
+		if elem == str {
+			return true
+		}
+	}
+	return false
+}
