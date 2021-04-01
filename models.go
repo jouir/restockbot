@@ -46,6 +46,6 @@ func (p *Product) ToMerge(o *Product) bool {
 
 // Shop represents a retailer website
 type Shop struct {
-	ID   uint   `gorm:"primaryKey;autoIncrement"`
+	ID   uint   `gorm:"primaryKey"`
 	Name string `gorm:"unique" json:"name"`
 }
