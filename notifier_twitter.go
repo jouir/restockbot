@@ -26,10 +26,11 @@ type Tweet struct {
 
 // TwitterNotifier to manage notifications to Twitter
 type TwitterNotifier struct {
-	db          *gorm.DB
-	client      *twitter.Client
-	user        *twitter.User
-	hashtagsMap []map[string]string
+	db            *gorm.DB
+	client        *twitter.Client
+	user          *twitter.User
+	hashtagsMap   []map[string]string
+	enableReplies bool
 }
 
 // NewTwitterNotifier creates a TwitterNotifier
@@ -57,7 +58,7 @@ func NewTwitterNotifier(c *TwitterConfig, db *gorm.DB) (*TwitterNotifier, error)
 	}
 	log.Debugf("connected to twitter as @%s", user.ScreenName)
 
-	return &TwitterNotifier{client: client, user: user, hashtagsMap: c.Hashtags, db: db}, nil
+	return &TwitterNotifier{client: client, user: user, hashtagsMap: c.Hashtags, db: db, enableReplies: c.EnableReplies}, nil
 }
 
 // create a brand new tweet
@@ -147,15 +148,17 @@ func (c *TwitterNotifier) NotifyWhenNotAvailable(productURL string, duration tim
 		return nil
 	}
 
-	// format message
-	message := fmt.Sprintf("And it's gone (%s)", duration)
+	if c.enableReplies {
+		// format message
+		message := fmt.Sprintf("And it's gone (%s)", duration)
 
-	// close thread on twitter
-	_, err := c.replyToTweet(tweet.TweetID, message)
-	if err != nil {
-		return fmt.Errorf("failed to create reply tweet: %s", err)
+		// close thread on twitter
+		_, err := c.replyToTweet(tweet.TweetID, message)
+		if err != nil {
+			return fmt.Errorf("failed to create reply tweet: %s", err)
+		}
+		log.Infof("reply to tweet %d sent", tweet.TweetID)
 	}
-	log.Infof("reply to tweet %d sent", tweet.TweetID)
 
 	// remove tweet from database
 	trx = c.db.Unscoped().Delete(&tweet)

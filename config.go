@@ -25,13 +25,15 @@ type TwitterConfig struct {
 	AccessToken       string              `json:"access_token"`
 	AccessTokenSecret string              `json:"access_token_secret"`
 	Hashtags          []map[string]string `json:"hashtags"`
+	EnableReplies     bool                `json:"enable_replies"`
 }
 
 // TelegramConfig to store Telegram API key
 type TelegramConfig struct {
-	Token       string `json:"token"`
-	ChatID      int64  `json:"chat_id"`
-	ChannelName string `json:"channel_name"`
+	Token         string `json:"token"`
+	ChatID        int64  `json:"chat_id"`
+	ChannelName   string `json:"channel_name"`
+	EnableReplies bool   `json:"enable_replies"`
 }
 
 // ApiConfig to store HTTP API configuration

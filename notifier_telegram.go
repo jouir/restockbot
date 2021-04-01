@@ -19,11 +19,11 @@ type TelegramMessage struct {
 
 // TelegramNotifier to manage notifications to Twitter
 type TelegramNotifier struct {
-	db          *gorm.DB
-	bot         *telegram.BotAPI
-	chatID      int64
-	channelName string
-	timeout     int
+	db            *gorm.DB
+	bot           *telegram.BotAPI
+	chatID        int64
+	channelName   string
+	enableReplies bool
 }
 
 // NewTelegramNotifier to create a Notifier with Telegram capabilities
@@ -42,10 +42,11 @@ func NewTelegramNotifier(config *TelegramConfig, db *gorm.DB) (*TelegramNotifier
 	log.Debugf("connected to telegram as %s", bot.Self.UserName)
 
 	return &TelegramNotifier{
-		db:          db,
-		bot:         bot,
-		chatID:      config.ChatID,
-		channelName: config.ChannelName,
+		db:            db,
+		bot:           bot,
+		chatID:        config.ChatID,
+		channelName:   config.ChannelName,
+		enableReplies: config.EnableReplies,
 	}, nil
 }
 
@@ -92,15 +93,17 @@ func (n *TelegramNotifier) NotifyWhenNotAvailable(productURL string, duration ti
 		return nil
 	}
 
-	// format message
-	text := fmt.Sprintf("And it's gone (%s)", duration)
+	if n.enableReplies {
+		// format message
+		text := fmt.Sprintf("And it's gone (%s)", duration)
 
-	// send reply on telegram
-	_, err := n.sendMessage(text, m.MessageID)
-	if err != nil {
-		return fmt.Errorf("failed to reply on telegram: %s", err)
+		// send reply on telegram
+		_, err := n.sendMessage(text, m.MessageID)
+		if err != nil {
+			return fmt.Errorf("failed to reply on telegram: %s", err)
+		}
+		log.Infof("reply to telegram message %d sent", m.MessageID)
 	}
-	log.Infof("reply to telegram message %d sent", m.MessageID)
 
 	// remove message from database
 	trx = n.db.Unscoped().Delete(&m)
