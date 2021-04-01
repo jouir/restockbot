@@ -10,7 +10,7 @@ import (
 type Config struct {
 	TwitterConfig  `json:"twitter"`
 	TelegramConfig `json:"telegram"`
-	ApiConfig      `json:"api"`
+	APIConfig      `json:"api"`
 	AmazonConfig   `json:"amazon"`
 	URLs           []string `json:"urls"`
 	IncludeRegex   string   `json:"include_regex"`
@@ -36,8 +36,8 @@ type TelegramConfig struct {
 	EnableReplies bool   `json:"enable_replies"`
 }
 
-// ApiConfig to store HTTP API configuration
-type ApiConfig struct {
+// APIConfig to store HTTP API configuration
+type APIConfig struct {
 	Address  string `json:"address"`
 	Certfile string `json:"cert_file"`
 	Keyfile  string `json:"key_file"`
@@ -91,7 +91,7 @@ func (c *Config) HasTelegram() bool {
 	return c.TelegramConfig.Token != "" && (c.TelegramConfig.ChatID != 0 || c.TelegramConfig.ChannelName != "")
 }
 
-// HasURL returns true when list of URLS has been configured
+// HasURLs returns true when list of URLS has been configured
 func (c *Config) HasURLs() bool {
 	return len(c.URLs) > 0
 }

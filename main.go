@@ -117,7 +117,7 @@ func main() {
 
 	// start the api
 	if *api {
-		log.Fatal(StartAPI(db, config.ApiConfig))
+		log.Fatal(StartAPI(db, config.APIConfig))
 	}
 
 	// register notifiers

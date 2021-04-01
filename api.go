@@ -110,9 +110,9 @@ func (h *productsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Warnf("cannot parse available query to boolean: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		} else {
-			trx = h.db.Preload("Shop").Where(map[string]interface{}{"available": available}).Find(&products)
 		}
+
+		trx = h.db.Preload("Shop").Where(map[string]interface{}{"available": available}).Find(&products)
 	} else {
 		trx = h.db.Preload("Shop").Find(&products)
 	}
@@ -147,7 +147,7 @@ func (h *productHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // StartAPI to handle HTTP requests
-func StartAPI(db *gorm.DB, config ApiConfig) error {
+func StartAPI(db *gorm.DB, config APIConfig) error {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.Path("/health").HandlerFunc(handleHealth)
@@ -164,7 +164,6 @@ func StartAPI(db *gorm.DB, config ApiConfig) error {
 	log.Printf("starting API on %s", config.Address)
 	if config.Certfile != "" && config.Keyfile != "" {
 		return http.ListenAndServeTLS(config.Address, config.Certfile, config.Keyfile, router)
-	} else {
-		return http.ListenAndServe(config.Address, router)
 	}
+	return http.ListenAndServe(config.Address, router)
 }
