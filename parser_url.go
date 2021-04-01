@@ -28,6 +28,11 @@ func (p *URLParser) String() string {
 	return fmt.Sprintf("URLParser<%s>", p.url)
 }
 
+// ShopName returns shop name from URL
+func (p *URLParser) ShopName() (string, error) {
+	return ExtractShopName(p.url)
+}
+
 // NewURLParser to create a new URLParser instance
 func NewURLParser(url string, browserAddress string, includeRegex string, excludeRegex string) (*URLParser, error) {
 	var err error

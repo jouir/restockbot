@@ -153,6 +153,6 @@ func (p *AmazonParser) String() string {
 }
 
 // ShopName returns shop name from Amazon Marketplace
-func (p *AmazonParser) ShopName() string {
-	return strings.ReplaceAll(p.client.Marketplace(), "www.", "")
+func (p *AmazonParser) ShopName() (string, error) {
+	return strings.ReplaceAll(p.client.Marketplace(), "www.", ""), nil
 }

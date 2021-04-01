@@ -10,6 +10,7 @@ import (
 type Parser interface {
 	Parse() ([]*Product, error)
 	String() string
+	ShopName() (string, error)
 }
 
 // filterInclusive returns a list of products matching the include regex
