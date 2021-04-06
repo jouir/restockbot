@@ -14,7 +14,7 @@ type TelegramMessage struct {
 	gorm.Model
 	MessageID  int `gorm:"not null;unique"`
 	ProductURL string
-	Product    Product `gorm:"foreignKey:ProductURL"`
+	Product    Product `gorm:"not null;references:URL"`
 }
 
 // TelegramNotifier to manage notifications to Twitter

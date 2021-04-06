@@ -71,6 +71,19 @@ curl -s -XGET "https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHANNE
 
 Don't forget to prefix the channel name with an `@`.
 
+### Database
+
+Default database driver is SQLite using the `restockbot.db` file.
+
+To configure a PostgreSQL database, you can use Docker:
+
+```
+cp -p docker/environment.example docker/environment
+docker-compose -f docker-compose.yml up -d
+```
+
+Then see the configuration section to define the database configuration.
+
 ## Compilation
 
 ### With pre-built binaries
@@ -116,6 +129,9 @@ Default file is `restockbot.json` in the current directory. The file name can be
 
 Options:
 
+* `database` (optional)
+    * `type`: driver to use (`postgres`, `sqlite`)
+    * `dsn`: data source name (see [documentation](https://gorm.io/docs/connecting_to_the_database.html))
 * `urls` (optional): list of retailers web pages
 * `amazon` (optional)
     * `searches`: list of keywords to search for (ex: `["nvidia rtx", "amd rx"]`)

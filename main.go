@@ -10,7 +10,6 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -102,11 +101,16 @@ func main() {
 	}
 
 	// connect to the database
-	db, err := gorm.Open(sqlite.Open(*databaseFileName), &gorm.Config{})
+	var db *gorm.DB
+	if config.HasDatabase() {
+		db, err = NewDatabaseFromConfig(config.DatabaseConfig)
+	} else {
+		db, err = NewDatabaseFromFile(*databaseFileName)
+	}
 	if err != nil {
 		log.Fatalf("cannot connect to database: %s", err)
 	}
-	log.Debugf("connected to database %s", *databaseFileName)
+	log.Debugf("connected to database")
 
 	// create tables
 	if err := db.AutoMigrate(&Product{}); err != nil {

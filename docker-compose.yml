@@ -1,0 +1,18 @@
+---
+version: "2"
+
+services:
+  postgres:
+    container_name: postgres
+    env_file:
+      - ./docker/environment
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-storage:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres-storage:
+    driver: local

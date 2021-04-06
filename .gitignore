@@ -1,4 +1,5 @@
 bin/
+docker/environment
 restockbot.db
 restockbot.json
 restockbot.log

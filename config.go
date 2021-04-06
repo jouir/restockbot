@@ -8,6 +8,7 @@ import (
 
 // Config to store JSON configuration
 type Config struct {
+	DatabaseConfig `json:"database"`
 	TwitterConfig  `json:"twitter"`
 	TelegramConfig `json:"telegram"`
 	APIConfig      `json:"api"`
@@ -16,6 +17,12 @@ type Config struct {
 	IncludeRegex   string   `json:"include_regex"`
 	ExcludeRegex   string   `json:"exclude_regex"`
 	BrowserAddress string   `json:"browser_address"`
+}
+
+// DatabaseConfig to store database configuration
+type DatabaseConfig struct {
+	Type string `json:"type"`
+	DSN  string `json:"dsn"`
 }
 
 // TwitterConfig to store Twitter API secrets
@@ -94,6 +101,11 @@ func (c *Config) HasTelegram() bool {
 // HasURLs returns true when list of URLS has been configured
 func (c *Config) HasURLs() bool {
 	return len(c.URLs) > 0
+}
+
+// HasDatabase returns true when database has been configured
+func (c *Config) HasDatabase() bool {
+	return c.DatabaseConfig.Type != "" && c.DatabaseConfig.DSN != ""
 }
 
 // HasAmazon returns true when Amazon has been configured
