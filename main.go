@@ -49,9 +49,9 @@ func main() {
 	configFileName := flag.String("config", AppName+".json", "Configuration file name")
 	logFileName := flag.String("log-file", "", "Log file name")
 	disableNotifications := flag.Bool("disable-notifications", false, "Do not send notifications")
-	workers := flag.Int("workers", 1, "number of workers for parsing shops")
-	pidFile := flag.String("pid-file", "", "write process ID to this file to disable concurrent executions")
-	pidWaitTimeout := flag.Int("pid-wait-timeout", 0, "seconds to wait before giving up when another instance is running")
+	workers := flag.Int("workers", 1, "Number of workers for parsing shops")
+	pidFile := flag.String("pid-file", "", "Write process ID to this file to disable concurrent executions")
+	pidWaitTimeout := flag.Int("pid-wait-timeout", 0, "Seconds to wait before giving up when another instance is running")
 	retention := flag.Int("retention", 0, "Automatically remove products from the database with this number of days old (disabled by default)")
 	api := flag.Bool("api", false, "Start the HTTP API")
 
