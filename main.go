@@ -52,6 +52,7 @@ func main() {
 	workers := flag.Int("workers", 1, "number of workers for parsing shops")
 	pidFile := flag.String("pid-file", "", "write process ID to this file to disable concurrent executions")
 	pidWaitTimeout := flag.Int("pid-wait-timeout", 0, "seconds to wait before giving up when another instance is running")
+	retention := flag.Int("retention", 0, "Automatically remove products from the database with this number of days old (disabled by default)")
 	api := flag.Bool("api", false, "Start the HTTP API")
 
 	flag.Parse()
@@ -113,6 +114,23 @@ func main() {
 	}
 	if err := db.AutoMigrate(&Shop{}); err != nil {
 		log.Fatalf("cannot create shops table")
+	}
+
+	// delete products not updated since retention
+	if *retention != 0 {
+		var oldProducts []Product
+		retentionDate := time.Now().Local().Add(-time.Hour * 24 * time.Duration(*retention))
+		trx := db.Where("updated_at < ?", retentionDate).Find(&oldProducts)
+		if trx.Error != nil {
+			log.Warnf("cannot find stale products: %s", trx.Error)
+		}
+		for _, p := range oldProducts {
+			log.Debugf("found old product: %s", p.Name)
+			if trx = db.Unscoped().Delete(&p); trx.Error != nil {
+				log.Warnf("cannot remove stale product %: %s", p, trx.Error)
+			}
+			log.Printf("stale product %s (%s) removed from database", p.Name, p.URL)
+		}
 	}
 
 	// start the api
@@ -294,6 +312,13 @@ func handleProducts(parser Parser, notifiers []Notifier, db *gorm.DB, wg *sync.W
 				}
 			}
 		}
+
+		// keep track of active products
+		dbProduct.UpdatedAt = time.Now().Local()
+		if trx := db.Save(&dbProduct); trx.Error != nil {
+			log.Warnf("cannot update product %s to database: %s", dbProduct.Name, trx.Error)
+		}
+
 	}
 }
 
