@@ -2,8 +2,14 @@
 version: "2"
 
 services:
+  chromium:
+    container_name: restockbot-chromium
+    image: montferret/chromium
+    ports:
+      - "9222:9222"
+    restart: always
   postgres:
-    container_name: postgres
+    container_name: restockbot-postgres
     env_file:
       - ./docker/environment
     image: postgres:13
