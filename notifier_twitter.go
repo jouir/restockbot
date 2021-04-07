@@ -21,7 +21,7 @@ type Tweet struct {
 	gorm.Model
 	TweetID    int64
 	ProductURL string
-	Product    Product `gorm:"foreignKey:ProductURL"`
+	Product    Product `gorm:"not null;references:URL"`
 }
 
 // TwitterNotifier to manage notifications to Twitter
