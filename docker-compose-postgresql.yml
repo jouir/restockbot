@@ -11,7 +11,7 @@ services:
   postgres:
     container_name: restockbot-postgres
     env_file:
-      - ./docker/environment
+      - ./docker/postgresql.env
     image: postgres:13
     ports:
       - "5432:5432"

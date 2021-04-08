@@ -1,5 +1,6 @@
 bin/
-docker/environment
+docker/postgresql.env
+docker/mysql.env
 restockbot.db
 restockbot.json
 restockbot.log

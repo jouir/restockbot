@@ -1,0 +1,24 @@
+---
+version: "2"
+
+services:
+  chromium:
+    container_name: restockbot-chromium
+    image: montferret/chromium
+    ports:
+      - "9222:9222"
+    restart: always
+  mysql:
+    container_name: restockbot-mysql
+    env_file:
+      - ./docker/mysql.env
+    image: mysql:8
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-storage:/var/lib/mysql
+    restart: always
+
+volumes:
+  mysql-storage:
+    driver: local  

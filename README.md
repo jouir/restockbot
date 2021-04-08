@@ -73,13 +73,29 @@ Don't forget to prefix the channel name with an `@`.
 
 ### Database
 
+
+#### SQLite (default)
+
 Default database driver is SQLite using the `restockbot.db` file.
+
+#### PostgreSQL
 
 To configure a PostgreSQL database, you can use Docker:
 
 ```
-cp -p docker/environment.example docker/environment
-docker-compose -f docker-compose.yml up -d
+cp -p docker/postgresql.env.example docker/postgresql.env
+docker-compose -f docker-compose-postgresql.yml up -d
+```
+
+Then see the configuration section to define the database configuration.
+
+#### MySQL
+
+To configure a MySQL database, you can use Docker:
+
+```
+cp -p docker/mysql.env.example docker/mysql.env
+docker-compose -f docker-compose-mysql.yml up -d
 ```
 
 Then see the configuration section to define the database configuration.
@@ -130,7 +146,7 @@ Default file is `restockbot.json` in the current directory. The file name can be
 Options:
 
 * `database` (optional)
-    * `type`: driver to use (`postgres`, `sqlite`)
+    * `type`: driver to use (`sqlite`, `postgres`, `mysql`)
     * `dsn`: data source name (see [documentation](https://gorm.io/docs/connecting_to_the_database.html))
 * `urls` (optional): list of retailers web pages
 * `amazon` (optional)
