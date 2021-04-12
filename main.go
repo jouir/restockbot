@@ -197,14 +197,17 @@ func main() {
 	jobsCount := 0
 
 	for _, parser := range parsers {
-		if jobsCount < *workers {
-			wg.Add(1)
-			jobsCount++
-			go handleProducts(parser, notifiers, db, &wg)
-		} else {
-			log.Debugf("waiting for intermediate jobs to end")
-			wg.Wait()
-			jobsCount = 0
+		for {
+			if jobsCount < *workers {
+				wg.Add(1)
+				jobsCount++
+				go handleProducts(parser, notifiers, db, &wg)
+				break
+			} else {
+				log.Debugf("waiting for intermediate jobs to end")
+				wg.Wait()
+				jobsCount = 0
+			}
 		}
 	}
 
