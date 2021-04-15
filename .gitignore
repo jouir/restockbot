@@ -7,3 +7,4 @@ restockbot.log
 restockbot.pid
 ferret.log
 shop.fql
+*.bak
