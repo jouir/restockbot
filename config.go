@@ -33,6 +33,7 @@ type TwitterConfig struct {
 	AccessTokenSecret string              `json:"access_token_secret"`
 	Hashtags          []map[string]string `json:"hashtags"`
 	EnableReplies     bool                `json:"enable_replies"`
+	Retention         int                 `json:"retention"`
 }
 
 // TelegramConfig to store Telegram API key

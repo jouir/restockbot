@@ -26,3 +26,13 @@ func ContainsString(arr []string, str string) bool {
 	}
 	return false
 }
+
+// CoalesceInt64 returns the first non zero value from variadic int64 arguments
+func CoalesceInt64(values ...int64) int64 {
+	for _, value := range values {
+		if value != 0 {
+			return value
+		}
+	}
+	return 0
+}

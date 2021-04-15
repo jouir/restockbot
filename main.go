@@ -132,8 +132,9 @@ func main() {
 			log.Debugf("found old product: %s", p.Name)
 			if trx = db.Unscoped().Delete(&p); trx.Error != nil {
 				log.Warnf("cannot remove stale product %s (%s): %s", p.Name, p.URL, trx.Error)
+			} else {
+				log.Logf("stale product %s (%s) removed from database", p.Name, p.URL)
 			}
-			log.Printf("stale product %s (%s) removed from database", p.Name, p.URL)
 		}
 	}
 

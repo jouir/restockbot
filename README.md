@@ -164,6 +164,7 @@ Options:
     * `access_token_secret`: authentication token secret generated for your Twitter account
     * `hashtags`: list of key/value used to append hashtags to each tweet. Key is the pattern to match in the product name, value is the string to append to the tweet. For example, `{"twitter": {"hashtags": [{"rtx 3090": "#nvidia #rtx3090"}]}}` will detect `rtx 3090` to append `#nvidia #rtx3090` at the end of the tweet.
     * `enable_replies`: reply to original message when product is not available anymore
+    * `retention`: number of days to keep tweet references in the database (not deleted by default)
 * `telegram` (optional):
     * `channel_name`: send message to a channel (ex: `@channel`)
     * `chat_id`: send message to a chat (ex: `1234`)

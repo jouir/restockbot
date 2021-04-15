@@ -31,3 +31,31 @@ func TestExtractShopName(t *testing.T) {
 		})
 	}
 }
+
+func TestCoalesceInt64(t *testing.T) {
+	tests := []struct {
+		arguments []int64
+		expected  int64
+	}{
+		// single value
+		{[]int64{0}, 0},
+		{[]int64{99}, 99},
+
+		// multiple values
+		{[]int64{0, 0}, 0},
+		{[]int64{0, 99}, 99},
+		{[]int64{99, 0}, 99},
+		{[]int64{99, 99}, 99},
+	}
+
+	for i, tc := range tests {
+		t.Run(fmt.Sprintf("TestExtractShopName#%d", i), func(t *testing.T) {
+			result := CoalesceInt64(tc.arguments...)
+			if result != tc.expected {
+				t.Errorf("for %+v: got %d, want %d", tc.arguments, result, tc.expected)
+			} else {
+				t.Logf("for %+v: got %d, want %d", tc.arguments, result, tc.expected)
+			}
+		})
+	}
+}
