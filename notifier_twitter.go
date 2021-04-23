@@ -23,6 +23,7 @@ type Tweet struct {
 	TweetID     int64   `gorm:"not null;unique"`
 	Hash        string  `gorm:"unique"`
 	LastTweetID int64   `gorm:"index"`
+	Counter     int64   `gorm:"not null;default:1"`
 	ProductURL  string  `gorm:"index"`
 	Product     Product `gorm:"not null;references:URL"`
 }
@@ -143,7 +144,7 @@ func (c *TwitterNotifier) buildHashtags(productName string) string {
 func (c *TwitterNotifier) NotifyWhenAvailable(shopName string, productName string, productPrice float64, productCurrency string, productURL string) error {
 	// format message
 	hashtags := c.buildHashtags(productName)
-	message := formatAvailableTweet(shopName, productName, productPrice, productCurrency, productURL, hashtags)
+	message := formatAvailableTweet(shopName, productName, productPrice, productCurrency, productURL, hashtags, 0)
 
 	// compute message checksum to avoid duplicates
 	var tweet Tweet
@@ -164,7 +165,7 @@ func (c *TwitterNotifier) NotifyWhenAvailable(shopName string, productName strin
 		log.Infof("tweet %d sent for product '%s'", tweetID, productURL)
 
 		// save thread to database
-		tweet = Tweet{TweetID: tweetID, ProductURL: productURL, Hash: hash}
+		tweet = Tweet{TweetID: tweetID, ProductURL: productURL, Hash: hash, Counter: 1}
 		trx = c.db.Create(&tweet)
 		if trx.Error != nil {
 			return fmt.Errorf("could not save tweet %d to database for product '%s': %s", tweet.TweetID, productURL, trx.Error)
@@ -173,48 +174,49 @@ func (c *TwitterNotifier) NotifyWhenAvailable(shopName string, productName strin
 
 	} else {
 
-		if !c.enableReplies {
-			log.Debugf("twitter replies are disabled, skipping available notification for product '%s'", productURL)
-			return nil
-		}
-
-		// select tweet to reply
-		lastTweetID := CoalesceInt64(tweet.LastTweetID, tweet.TweetID)
-		if lastTweetID == 0 {
-			return fmt.Errorf("could not find original tweet ID to create reply for product '%s'", productURL)
-		}
-
-		// tweet already has been sent in the past and replies are enabled
-		// continuing thread
-		tweetID, err := c.replyToTweet(lastTweetID, "Good news, it's available again!")
+		// tweet already has been sent in the past
+		// creating new thread with a counter
+		tweet.Counter++
+		message = formatAvailableTweet(shopName, productName, productPrice, productCurrency, productURL, hashtags, tweet.Counter)
+		tweetID, err := c.createTweet(message)
 		if err != nil {
-			return fmt.Errorf("could not reply to tweet %d for product '%s': %s", lastTweetID, productURL, err)
+			return fmt.Errorf("could not create new twitter thread for product '%s': %s", productURL, err)
 		}
-		log.Infof("reply to tweet %d sent with id %d for product '%s'", lastTweetID, tweetID, productURL)
+		log.Infof("tweet %d sent for product '%s'", tweetID, productURL)
 
 		// save thread to database
 		tweet.LastTweetID = tweetID
 		if trx = c.db.Save(&tweet); trx.Error != nil {
 			return fmt.Errorf("could not save tweet %d to database for product '%s': %s", tweet.TweetID, productURL, trx.Error)
 		}
-		log.Debugf("tweet %d saved in database", tweet.TweetID)
+		log.Debugf("tweet %d saved to database", tweet.TweetID)
 	}
 
 	return nil
 }
 
 // formatAvailableTweet creates a message based on product characteristics
-func formatAvailableTweet(shopName string, productName string, productPrice float64, productCurrency string, productURL string, hashtags string) string {
+func formatAvailableTweet(shopName string, productName string, productPrice float64, productCurrency string, productURL string, hashtags string, counter int64) string {
 	// format message
 	formattedPrice := formatPrice(productPrice, productCurrency)
 	message := fmt.Sprintf("%s: %s for %s is available at %s %s", shopName, productName, formattedPrice, productURL, hashtags)
+	if counter > 1 {
+		message = fmt.Sprintf("%s (%d)", message, counter)
+	}
 
 	// truncate tweet if too big
 	if utf8.RuneCountInString(message) > tweetMaxSize {
+		messageWithoutProduct := fmt.Sprintf("%s:  for %s is available at %s %s", shopName, formattedPrice, productURL, hashtags)
+		if counter > 1 {
+			messageWithoutProduct = fmt.Sprintf("%s (%d)", messageWithoutProduct, counter)
+		}
 		// maximum tweet size - other characters - additional "…" to say product name has been truncated
-		productNameSize := tweetMaxSize - utf8.RuneCountInString(fmt.Sprintf("%s:  for %s is available at %s %s", shopName, formattedPrice, productURL, hashtags)) - 1
+		productNameSize := tweetMaxSize - utf8.RuneCountInString(messageWithoutProduct) - 1
 		format := fmt.Sprintf("%%s: %%.%ds… for %%s is available at %%s %%s", productNameSize)
 		message = fmt.Sprintf(format, shopName, productName, formattedPrice, productURL, hashtags)
+		if counter > 1 {
+			message = fmt.Sprintf("%s (%d)", message, counter)
+		}
 	}
 
 	return message

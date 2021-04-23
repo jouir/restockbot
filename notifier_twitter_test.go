@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"testing"
+	"unicode/utf8"
 )
 
 func TestBuildHashtags(t *testing.T) {
@@ -64,19 +65,68 @@ func TestFormatAvailableTweet(t *testing.T) {
 		productCurrency string
 		productURL      string
 		hashtags        string
+		counter         int64
 		expected        string
 	}{
-		{"shop.com", "my awesome product", 999.99, "USD", "https://shop.com/awesome", "#awesome #product", "shop.com: my awesome product for $999.99 is available at https://shop.com/awesome #awesome #product"},
-		{"shop.com", "my awesome product with very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long name", 999.99, "USD", "https://shop.com/awesome", "#awesome #product", "shop.com: my awesome product with very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very… for $999.99 is available at https://shop.com/awesome #awesome #product"},
+		{
+			// short product name
+			"shop.com",
+			"my awesome product",
+			999.99,
+			"USD",
+			"https://shop.com/awesome",
+			"#awesome #product",
+			0,
+			"shop.com: my awesome product for $999.99 is available at https://shop.com/awesome #awesome #product",
+		},
+		{
+			// long product name
+			"shop.com",
+			"my awesome product with very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long name",
+			999.99,
+			"USD",
+			"https://shop.com/awesome",
+			"#awesome #product",
+			0,
+			"shop.com: my awesome product with very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very… for $999.99 is available at https://shop.com/awesome #awesome #product",
+		},
+		{
+			// short product name with a counter
+			"shop.com",
+			"my awesome product",
+			999.99,
+			"USD",
+			"https://shop.com/awesome",
+			"#awesome #product",
+			2,
+			"shop.com: my awesome product for $999.99 is available at https://shop.com/awesome #awesome #product (2)",
+		},
+		{
+			// long product name with a counter
+			"shop.com",
+			"my awesome product with very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long name",
+			999.99,
+			"USD",
+			"https://shop.com/awesome",
+			"#awesome #product",
+			2,
+			"shop.com: my awesome product with very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very … for $999.99 is available at https://shop.com/awesome #awesome #product (2)",
+		},
 	}
 	for i, tc := range tests {
 		t.Run(fmt.Sprintf("TestFormatAvailableTweet#%d", i), func(t *testing.T) {
-			got := formatAvailableTweet(tc.shopName, tc.productName, tc.productPrice, tc.productCurrency, tc.productURL, tc.hashtags)
+			got := formatAvailableTweet(tc.shopName, tc.productName, tc.productPrice, tc.productCurrency, tc.productURL, tc.hashtags, tc.counter)
 			if got != tc.expected {
 				t.Errorf("for %s, got '%s', want '%s'", tc.productName, got, tc.expected)
 			} else {
 				t.Logf("for %s, got '%s', want '%s'", tc.productName, got, tc.expected)
 			}
+
+			// ensure generated tweet doesn't exceed maximum length
+			if utf8.RuneCountInString(got) > tweetMaxSize {
+				t.Errorf("for %s, got '%s' which exceeed tweet maximum lenght of %d chars", tc.productName, got, tweetMaxSize)
+			}
+
 		})
 	}
 }
