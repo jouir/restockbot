@@ -25,7 +25,7 @@ type Tweet struct {
 	LastTweetID int64   `gorm:"index"`
 	Counter     int64   `gorm:"not null;default:1"`
 	ProductURL  string  `gorm:"index"`
-	Product     Product `gorm:"not null;references:URL"`
+	Product     Product `gorm:"not null;references:URL;constraint:OnDelete:CASCADE"`
 }
 
 // TwitterNotifier to manage notifications to Twitter
