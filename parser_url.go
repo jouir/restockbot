@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 
 	log "github.com/sirupsen/logrus"
 
@@ -16,10 +15,8 @@ import (
 
 // URLParser structure to handle websites parsing logic
 type URLParser struct {
-	url          string
-	includeRegex *regexp.Regexp
-	excludeRegex *regexp.Regexp
-	ctx          context.Context
+	url string
+	ctx context.Context
 }
 
 // String to print URLParser
@@ -34,25 +31,7 @@ func (p *URLParser) ShopName() (string, error) {
 }
 
 // NewURLParser to create a new URLParser instance
-func NewURLParser(url string, browserAddress string, includeRegex string, excludeRegex string) (*URLParser, error) {
-	var err error
-	var includeRegexCompiled, excludeRegexCompiled *regexp.Regexp
-
-	log.Debugf("compiling include name regex")
-	if includeRegex != "" {
-		includeRegexCompiled, err = regexp.Compile(includeRegex)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	log.Debugf("compiling exclude name regex")
-	if excludeRegex != "" {
-		excludeRegexCompiled, err = regexp.Compile(excludeRegex)
-		if err != nil {
-			return nil, err
-		}
-	}
+func NewURLParser(url string, browserAddress string) *URLParser {
 
 	log.Debugf("creating context with headless browser drivers")
 	ctx := context.Background()
@@ -60,11 +39,9 @@ func NewURLParser(url string, browserAddress string, includeRegex string, exclud
 	ctx = drivers.WithContext(ctx, http.NewDriver(), drivers.AsDefault())
 
 	return &URLParser{
-		url:          url,
-		includeRegex: includeRegexCompiled,
-		excludeRegex: excludeRegexCompiled,
-		ctx:          ctx,
-	}, nil
+		url: url,
+		ctx: ctx,
+	}
 }
 
 // Parse a website to return list of products
@@ -95,10 +72,6 @@ func (p *URLParser) Parse() ([]*Product, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// apply filters
-	products = filterInclusive(p.includeRegex, products)
-	products = filterExclusive(p.excludeRegex, products)
 
 	return products, nil
 }

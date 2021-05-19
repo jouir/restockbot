@@ -163,28 +163,41 @@ func main() {
 		}
 	}
 
+	// register filters
+	filters := []Filter{}
+	if config.IncludeRegex != "" {
+		includeFilter, err := NewIncludeFilter(config.IncludeRegex)
+		if err != nil {
+			log.Fatalf("cannot create include filter: %s", err)
+		}
+		filters = append(filters, includeFilter)
+	}
+	if config.ExcludeRegex != "" {
+		excludeFilter, err := NewExcludeFilter(config.ExcludeRegex)
+		if err != nil {
+			log.Fatalf("cannot create exclude filter: %s", err)
+		}
+		filters = append(filters, excludeFilter)
+	}
+
 	// create parsers
 	parsers := []Parser{}
 
 	if config.HasURLs() {
+		// create a parser for all web pages
 		for _, url := range config.URLs {
-			// create parser
-			parser, err := NewURLParser(url, config.BrowserAddress, config.IncludeRegex, config.ExcludeRegex)
-			if err != nil {
-				log.Warnf("could not create URL parser for '%s'", url)
-				continue
-			}
+			parser := NewURLParser(url, config.BrowserAddress)
 			parsers = append(parsers, parser)
 			log.Debugf("parser %s registered", parser)
 		}
 	}
 
 	if config.HasAmazon() {
+		// create a parser for all marketplaces
 		for _, marketplace := range config.AmazonConfig.Marketplaces {
-			// create parser
-			parser, err := NewAmazonParser(marketplace.Name, marketplace.PartnerTag, config.AmazonConfig.AccessKey, config.AmazonConfig.SecretKey, config.AmazonConfig.Searches, config.IncludeRegex, config.ExcludeRegex, config.AmazonConfig.AmazonFulfilled, config.AmazonConfig.AmazonMerchant, config.AmazonConfig.AffiliateLinks)
+			parser := NewAmazonParser(marketplace.Name, marketplace.PartnerTag, config.AmazonConfig.AccessKey, config.AmazonConfig.SecretKey, config.AmazonConfig.Searches, config.AmazonConfig.AmazonFulfilled, config.AmazonConfig.AmazonMerchant, config.AmazonConfig.AffiliateLinks)
 			if err != nil {
-				log.Warnf("could not create Amazon parser: %s", err)
+				log.Warnf("could not create Amazon parser for marketplace %s: %s", marketplace, err)
 				continue
 			}
 
@@ -202,7 +215,7 @@ func main() {
 			if jobsCount < *workers {
 				wg.Add(1)
 				jobsCount++
-				go handleProducts(parser, notifiers, db, &wg)
+				go handleProducts(parser, notifiers, filters, db, &wg)
 				break
 			} else {
 				log.Debugf("waiting for intermediate jobs to end")
@@ -217,7 +230,7 @@ func main() {
 }
 
 // For parser to return a list of products, then eventually send notifications
-func handleProducts(parser Parser, notifiers []Notifier, db *gorm.DB, wg *sync.WaitGroup) {
+func handleProducts(parser Parser, notifiers []Notifier, filters []Filter, db *gorm.DB, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	log.Debugf("parsing with %s", parser)
@@ -241,10 +254,20 @@ func handleProducts(parser Parser, notifiers []Notifier, db *gorm.DB, wg *sync.W
 		log.Warnf("cannot parse: %s", err)
 		return
 	}
-	log.Debugf("parsed")
 
-	// insert or update products to database
 	for _, product := range products {
+
+		// skip products not matching all filters
+		included := true
+		for _, filter := range filters {
+			if included && !filter.Include(product) {
+				included = false
+				continue
+			}
+		}
+		if !included {
+			continue
+		}
 
 		log.Debugf("detected product %+v", product)
 

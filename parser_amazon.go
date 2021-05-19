@@ -39,35 +39,14 @@ type AmazonParser struct {
 }
 
 // NewAmazonParser to create a new AmazonParser instance
-func NewAmazonParser(marketplace string, partnerTag string, accessKey string, secretKey string, searches []string, includeRegex string, excludeRegex string, amazonFulfilled bool, amazonMerchant bool, affiliateLinks bool) (*AmazonParser, error) {
-	var err error
-	var includeRegexCompiled, excludeRegexCompiled *regexp.Regexp
-
-	log.Debugf("compiling include name regex")
-	if includeRegex != "" {
-		includeRegexCompiled, err = regexp.Compile(includeRegex)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	log.Debugf("compiling exclude name regex")
-	if excludeRegex != "" {
-		excludeRegexCompiled, err = regexp.Compile(excludeRegex)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+func NewAmazonParser(marketplace string, partnerTag string, accessKey string, secretKey string, searches []string, amazonFulfilled bool, amazonMerchant bool, affiliateLinks bool) *AmazonParser {
 	return &AmazonParser{
 		client:          NewAmazonServer(marketplace).CreateClient(partnerTag, accessKey, secretKey),
 		searches:        searches,
-		includeRegex:    includeRegexCompiled,
-		excludeRegex:    excludeRegexCompiled,
 		amazonFulfilled: amazonFulfilled,
 		amazonMerchant:  amazonMerchant,
 		affiliateLinks:  affiliateLinks,
-	}, nil
+	}
 }
 
 // Parse Amazon API to return list of products
@@ -138,10 +117,6 @@ func (p *AmazonParser) Parse() ([]*Product, error) {
 			products = append(products, product)
 		}
 	}
-
-	// apply filters
-	products = filterInclusive(p.includeRegex, products)
-	products = filterExclusive(p.excludeRegex, products)
 
 	return products, nil
 }
