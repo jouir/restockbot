@@ -6,10 +6,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// IncludeFilter struct to store the compiled regex used for the inclusion
 type IncludeFilter struct {
 	regex *regexp.Regexp
 }
 
+// NewIncludeFilter to create an IncludeFilter
 func NewIncludeFilter(regex string) (*IncludeFilter, error) {
 	var err error
 	var compiledRegex *regexp.Regexp
@@ -25,7 +27,7 @@ func NewIncludeFilter(regex string) (*IncludeFilter, error) {
 	return &IncludeFilter{regex: compiledRegex}, nil
 }
 
-// Filter includes product with name matching the regex
+// Include returns treue when the product name matches the regex
 // implements the Filter interface
 func (f *IncludeFilter) Include(product *Product) bool {
 	if f.regex == nil {

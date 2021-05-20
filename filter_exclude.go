@@ -6,10 +6,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// ExcludeFilter struct to store the compiled regex used for the exclusion
 type ExcludeFilter struct {
 	regex *regexp.Regexp
 }
 
+// NewExcludeFilter to create an ExcludeFilter
 func NewExcludeFilter(regex string) (*ExcludeFilter, error) {
 	var err error
 	var compiledRegex *regexp.Regexp
@@ -25,7 +27,7 @@ func NewExcludeFilter(regex string) (*ExcludeFilter, error) {
 	return &ExcludeFilter{regex: compiledRegex}, nil
 }
 
-// Filter excludes product with name matching the regex
+// Include returns false when the product name matches the regex
 // implements the Filter interface
 func (f *ExcludeFilter) Include(product *Product) bool {
 	if f.regex == nil {
