@@ -27,7 +27,7 @@ func NewIncludeFilter(regex string) (*IncludeFilter, error) {
 	return &IncludeFilter{regex: compiledRegex}, nil
 }
 
-// Include returns treue when the product name matches the regex
+// Include returns true when the product name matches the regex
 // implements the Filter interface
 func (f *IncludeFilter) Include(product *Product) bool {
 	if f.regex == nil {
