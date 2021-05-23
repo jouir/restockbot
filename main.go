@@ -179,6 +179,16 @@ func main() {
 		}
 		filters = append(filters, excludeFilter)
 	}
+	if len(config.PriceRanges) > 0 {
+		converter := NewCurrencyConverter()
+		for _, pr := range config.PriceRanges {
+			rangeFilter, err := NewRangeFilter(pr.Model, pr.Min, pr.Max, pr.Currency, converter)
+			if err != nil {
+				log.Fatalf("cannot create price range filter: %s", err)
+			}
+			filters = append(filters, rangeFilter)
+		}
+	}
 
 	// create parsers
 	parsers := []Parser{}

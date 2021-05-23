@@ -172,6 +172,7 @@ Options:
     * `enable_replies`: reply to original message when product is not available anymore
 * `include_regex` (optional): include products with a name matching this regexp
 * `exclude_regex` (optional): exclude products with a name matching this regexp
+* `price_ranges` (optional): define price ranges for products based on the model. List of rules containing `model` (regex to apply to the product name, string), `min` (minimum expected price, float), `max` (maximum expected price, float), `currency` (price currency used by the filter, string). For example `{"price_ranges":[{"model": "3090", "min": 0, "max": 3000, "currency": "EUR"}]}`
 * `browser_address` (optional): set headless browser address (ex: `http://127.0.0.1:9222`)
 * `api` (optional):
     * `address`: listen address for the REST API (ex: `127.0.0.1:8000`)

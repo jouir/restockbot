@@ -8,6 +8,7 @@ require (
 	github.com/dghubble/oauth1 v0.7.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.0.0-rc1
 	github.com/gorilla/mux v1.8.0
+	github.com/jarcoal/httpmock v1.0.8 // indirect
 	github.com/sirupsen/logrus v1.8.0
 	github.com/spiegel-im-spiegel/pa-api v0.9.0
 	gorm.io/driver/mysql v1.0.5

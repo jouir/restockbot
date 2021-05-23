@@ -13,10 +13,11 @@ type Config struct {
 	TelegramConfig `json:"telegram"`
 	APIConfig      `json:"api"`
 	AmazonConfig   `json:"amazon"`
-	URLs           []string `json:"urls"`
-	IncludeRegex   string   `json:"include_regex"`
-	ExcludeRegex   string   `json:"exclude_regex"`
-	BrowserAddress string   `json:"browser_address"`
+	URLs           []string     `json:"urls"`
+	IncludeRegex   string       `json:"include_regex"`
+	ExcludeRegex   string       `json:"exclude_regex"`
+	PriceRanges    []PriceRange `json:"price_ranges"`
+	BrowserAddress string       `json:"browser_address"`
 }
 
 // DatabaseConfig to store database configuration
@@ -63,6 +64,14 @@ type AmazonConfig struct {
 	AmazonFulfilled bool `json:"amazon_fulfilled"`
 	AmazonMerchant  bool `json:"amazon_merchant"`
 	AffiliateLinks  bool `json:"affiliate_links"`
+}
+
+// PriceRange to store rules to filter products with price outside of the range
+type PriceRange struct {
+	Model    string  `json:"model"`
+	Min      float64 `json:"min"`
+	Max      float64 `json:"max"`
+	Currency string  `json:"currency"`
 }
 
 // NewConfig creates a Config struct
