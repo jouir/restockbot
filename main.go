@@ -340,16 +340,18 @@ func handleProducts(parser Parser, notifiers []Notifier, filters []Filter, db *g
 		}
 
 		// send notifications
-		if createThread {
-			for _, notifier := range notifiers {
-				if err := notifier.NotifyWhenAvailable(shop.Name, dbProduct.Name, dbProduct.Price, dbProduct.PriceCurrency, dbProduct.URL); err != nil {
-					log.Errorf("%s", err)
+		if duration > 0 {
+			if createThread {
+				for _, notifier := range notifiers {
+					if err := notifier.NotifyWhenAvailable(shop.Name, dbProduct.Name, dbProduct.Price, dbProduct.PriceCurrency, dbProduct.URL); err != nil {
+						log.Errorf("%s", err)
+					}
 				}
-			}
-		} else if closeThread {
-			for _, notifier := range notifiers {
-				if err := notifier.NotifyWhenNotAvailable(dbProduct.URL, duration); err != nil {
-					log.Errorf("%s", err)
+			} else if closeThread {
+				for _, notifier := range notifiers {
+					if err := notifier.NotifyWhenNotAvailable(dbProduct.URL, duration); err != nil {
+						log.Errorf("%s", err)
+					}
 				}
 			}
 		}
