@@ -214,6 +214,7 @@ func createQueryForCybertek(url string) string {
 // gather first page
 LET first_page  = '` + url + `'
 LET doc = DOCUMENT(first_page, {driver: "cdp"})
+LET home_page = 'https://www.cybertek.fr/boutique/index.aspx'
 
 // discover next pages
 LET pagination = ELEMENT(doc, "div .pagination-div")
@@ -232,6 +233,7 @@ LET results = (
         LET products_available = (
             FOR el IN ELEMENTS(doc, "div .listing_dispo")
                 LET url = ELEMENT(el, "a")
+                FILTER url.attributes.href != home_page // exclude home page
                 LET name = TRIM(FIRST(SPLIT(INNER_TEXT(ELEMENT(el, "div .height-txt-cat")), "-")))
                 LET price = TO_FLOAT(SUBSTITUTE(INNER_TEXT(ELEMENT(el, "div .price_prod_resp")), "€", "."))
                 RETURN {
@@ -245,6 +247,7 @@ LET results = (
         LET products_not_available = (
             FOR el IN ELEMENTS(doc, "div .listing_nodispo")
                 LET url = ELEMENT(el, "a")
+                FILTER url.attributes.href != home_page // exclude home page
                 LET name = TRIM(FIRST(SPLIT(INNER_TEXT(ELEMENT(el, "div .height-txt-cat")), "-")))
                 LET price = TO_FLOAT(SUBSTITUTE(INNER_TEXT(ELEMENT(el, "div .price_prod_resp")), "€", "."))
                 RETURN {
@@ -261,7 +264,7 @@ LET results = (
 
 // combine all arrays to a single one
 RETURN FLATTEN(results)
-	`
+    `
 	return q
 }
 
