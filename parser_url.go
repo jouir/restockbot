@@ -80,6 +80,8 @@ func createQuery(shopName string, url string) (string, error) {
 	switch shopName {
 	case "cybertek.fr":
 		return createQueryForCybertek(url), nil
+	case "cdiscount.com":
+		return createQueryForCdiscount(url), nil
 	case "ldlc.com":
 		return createQueryForLDLC(url), nil
 	case "materiel.net":
@@ -457,5 +459,40 @@ FOR el IN ELEMENTS(doc, "div.vs-product-list div.vs-product-list-item")
         price_currency: price_currency,
     }
 	`
+	return q
+}
+
+/*
+ * TODO:
+ *   - list next products by triggering browser events and wait for them to load
+ *   - list unavailable products
+ *   - add pagination
+ */
+func createQueryForCdiscount(url string) string {
+	q := `
+LET page = '` + url + `'
+LET doc = DOCUMENT(page, {driver: "cdp"})
+
+WAIT_ELEMENT(doc, '.lpMain')
+WAIT_ELEMENT(doc, '#pager')
+
+LET main = ELEMENT(doc, '.lpMain')
+
+FOR product IN ELEMENTS(main, '.lpTdgProduct')
+    // remove "carte graphique" and product identifier from name
+    LET title = REGEX_REPLACE(ELEMENT(product, '.prdtBILTit'), '(?i)carte graphique | \(.*\)', '')
+    LET a = ELEMENT(product, '.prdtBILA')
+    LET price = TO_FLOAT(REGEX_REPLACE(INNER_TEXT(ELEMENT(product, '.prdtBILPrice .price')), '€', '.'))
+    LET price_currency = 'EUR'
+    LET available = ELEMENT_EXISTS(product, '.btGreen')
+    RETURN {
+        'name': title,
+        'url': a.attributes.href,
+        'price': price,
+        'price_currency': price_currency,
+        'available': available
+    }
+)
+`
 	return q
 }
