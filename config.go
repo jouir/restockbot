@@ -13,6 +13,7 @@ type Config struct {
 	TelegramConfig `json:"telegram"`
 	APIConfig      `json:"api"`
 	AmazonConfig   `json:"amazon"`
+	NvidiaFEConfig `json:"nvidia_fe"`
 	URLs           []string     `json:"urls"`
 	IncludeRegex   string       `json:"include_regex"`
 	ExcludeRegex   string       `json:"exclude_regex"`
@@ -66,6 +67,14 @@ type AmazonConfig struct {
 	AffiliateLinks  bool `json:"affiliate_links"`
 }
 
+// NvidiaFEConfig to store NVIDIA Founders Edition configuration
+type NvidiaFEConfig struct {
+	Locations []string `json:"locations"`
+	GPUs      []string `json:"gpus"`
+	UserAgent string   `json:"user_agent"`
+	Timeout   int      `json:"timeout"`
+}
+
 // PriceRange to store rules to filter products with price outside of the range
 type PriceRange struct {
 	Model    string  `json:"model"`
@@ -116,6 +125,11 @@ func (c *Config) HasURLs() bool {
 // HasDatabase returns true when database has been configured
 func (c *Config) HasDatabase() bool {
 	return c.DatabaseConfig.Type != "" && c.DatabaseConfig.DSN != ""
+}
+
+// HasNvidiaFE returns true when NVIDIA FE has been configured
+func (c *Config) HasNvidiaFE() bool {
+	return len(c.NvidiaFEConfig.Locations) > 0 && len(c.NvidiaFEConfig.GPUs) > 0
 }
 
 // HasAmazon returns true when Amazon has been configured

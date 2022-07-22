@@ -157,6 +157,11 @@ Options:
     * `amazon_fulfilled`: include only products packaged by Amazon
     * `amazon_merchant`: include only products sold by Amazon
     * `affiliate_links`: generate affiliate links with the partner tag
+* `nvidia_fe` (optional)
+    * `locations`: list of NVIDIA stores (ex `["es", "fr", "it"]`)
+    * `gpus`: list of models (ex: `["RTX 3060 Ti", "RTX 3070"]`)
+    * `user_agent`: user agent to simulate a real web browser (ex: `Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0`)
+    * `timeout`: maximum time before closing the request (optional)
 * `twitter` (optional):
     * `consumer_key`: API key of your Twitter application
     * `consumer_secret`: API secret of your Twitter application

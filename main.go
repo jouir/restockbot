@@ -216,6 +216,20 @@ func main() {
 		}
 	}
 
+	if config.HasNvidiaFE() {
+		// create a parser for all locations
+		for _, location := range config.NvidiaFEConfig.Locations {
+			parser, err := NewNvidiaFRParser(location, config.NvidiaFEConfig.GPUs, config.NvidiaFEConfig.UserAgent, config.NvidiaFEConfig.Timeout)
+			if err != nil {
+				log.Warnf("could not create NVIDIA FE parser for location %s: %s", location, err)
+				continue
+			}
+
+			parsers = append(parsers, parser)
+			log.Debugf("parser %s registered", parser)
+		}
+	}
+
 	// parse asynchronously
 	var wg sync.WaitGroup
 	jobsCount := 0
