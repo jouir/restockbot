@@ -74,7 +74,7 @@ func NewNvidiaFRParser(location string, gpus []string, userAgent string, timeout
 // ShopName returns a nice name for NVIDIA Founders Edition website
 // Implements the Parser interface
 func (p *NvidiaFEParser) ShopName() (string, error) {
-	return fmt.Sprintf("www.nvidia.com/%s-%s/shop/", p.location, p.location), nil
+	return fmt.Sprintf("nvidia.com/%s-%s/shop", p.location, p.location), nil
 }
 
 // String to print NvidiaFEParser
