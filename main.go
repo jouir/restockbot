@@ -53,6 +53,9 @@ func main() {
 	pidWaitTimeout := flag.Int("pid-wait-timeout", 0, "Seconds to wait before giving up when another instance is running")
 	retention := flag.Int("retention", 0, "Automatically remove products from the database with this number of days old (disabled by default)")
 	api := flag.Bool("api", false, "Start the HTTP API")
+	monitor := flag.Bool("monitor", false, "Perform health check with Nagios output")
+	warningTimeout := flag.Int("monitor-warning-timeout", 300, "Raise a warning alert when the last execution time has reached this number of seconds (see -monitor)")
+	criticalTimeout := flag.Int("monitor-critical-timeout", 600, "Raise a critical alert when the last execution time has reached this number of seconds (see -monitor)")
 
 	flag.Parse()
 
@@ -136,6 +139,11 @@ func main() {
 				log.Printf("stale product %s (%s) removed from database", p.Name, p.URL)
 			}
 		}
+	}
+
+	// start monitoring
+	if *monitor {
+		os.Exit(Monitor(db, *warningTimeout, *criticalTimeout))
 	}
 
 	// start the api
