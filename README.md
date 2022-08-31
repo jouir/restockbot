@@ -203,6 +203,7 @@ docker run -it --name restockbot --rm --link chromium:chromium -v $(pwd):/root/ 
 There are two modes:
 * **default**: without special argument, the bot parses websites and manage its own database
 * **API**: using the `-api` argument, the bot starts the HTTP API to expose data from the database
+* **monitor**: using the `-monitor` (optionaly with `-monitor-warning-timeout` and `-monitor-critical-timeout` arguments), the bot checks for last execution times per shop to return a Nagios compatible output
 
 ## How to contribute
 

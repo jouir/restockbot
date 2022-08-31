@@ -8,3 +8,4 @@ restockbot.pid
 ferret.log
 shop.fql
 *.bak
+venv
