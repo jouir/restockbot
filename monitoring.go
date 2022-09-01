@@ -83,7 +83,7 @@ func Monitor(db *gorm.DB, warningTimeout int, criticalTimeout int) (rc int) {
 		}
 
 		// Compare to thresholds and add to result map
-		result := MonitoringResult{ShopName: shop.Name, UpdatedAt: product.UpdatedAt, ReturnCode: NAGIOS_OK}
+		result := MonitoringResult{ShopName: shop.Name, UpdatedAt: product.UpdatedAt, ReturnCode: NagiosOk}
 		if product.UpdatedAt.Before(criticalTime) {
 			log.Infof("%s has been updated at %s (before time of %s) (crit)", shop.Name, product.UpdatedAt, criticalTime)
 			result.ReturnCode = NagiosCritical
@@ -107,7 +107,7 @@ func Monitor(db *gorm.DB, warningTimeout int, criticalTimeout int) (rc int) {
 		prefix = "CRIT"
 		message = FormatMonitoringResults(resultMap[NagiosCritical])
 	} else {
-		rc = NagiosOK
+		rc = NagiosOk
 		prefix = "OK"
 		message = "All shops have been updated recently"
 	}
