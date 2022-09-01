@@ -33,6 +33,8 @@ var nvidiaCurrencies = map[string]string{
 var supportedNvidiaGpus = []string{"RTX 3060 Ti", "RTX 3070", "RTX 3070 Ti", "RTX 3080", "RTX 3080 Ti", "RTX 3090", "RTX 3090 Ti"}
 var supportedNvidiaFELocations = []string{"es", "fr", "it"}
 
+// NvidiaFEParser to parse NVIDIA Founder Edition website parser
+// Implements the Parser interface
 type NvidiaFEParser struct {
 	location  string
 	gpus      []string
