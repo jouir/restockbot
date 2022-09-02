@@ -83,7 +83,7 @@ func Monitor(db *gorm.DB, warningTimeout int, criticalTimeout int) (rc int) {
 
 		// Fetch last execution time
 		var product Product
-		trx := db.Where(Product{ShopID: shop.ID}).Order("updated_at asc").First(&product)
+		trx := db.Where(Product{ShopID: shop.ID}).Order("updated_at desc").First(&product)
 		if trx.Error == gorm.ErrRecordNotFound {
 			result.Message = "has not been updated"
 			result.ReturnCode = NagiosCritical
