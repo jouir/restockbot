@@ -23,29 +23,34 @@ const (
 // MonitoringResult to store result of Nagios checks
 type MonitoringResult struct {
 	ShopName   string
-	UpdatedAt  time.Time
+	Message    string
 	ReturnCode int
 }
 
-// String to print a MonitoringResult nicely
+// String returns a string to print a MonitoringResult nicely
 func (m MonitoringResult) String() string {
-	diff := time.Now().Sub(m.UpdatedAt)
+	return fmt.Sprintf("%s %s (rc = %d)", m.ShopName, m.Message, m.ReturnCode)
+}
 
-	var wording string
-	if diff.Seconds() > 0 {
-		wording = "seconds"
-	} else {
-		wording = "second"
+// ReturnCodeString returns a string to print a ReturnCode nicely
+func ReturnCodeString(rc int) string {
+	switch rc {
+	case NagiosOk:
+		return "OK"
+	case NagiosWarning:
+		return "WARN"
+	case NagiosCritical:
+		return "CRIT"
+	default:
+		return "UNK"
 	}
-
-	return fmt.Sprintf("%s (%d %s ago)", m.ShopName, diff, wording)
 }
 
 // FormatMonitoringResults to print a list of MonitoringResult nicely
 func FormatMonitoringResults(results []MonitoringResult) string {
 	var s []string
 	for _, result := range results {
-		s = append(s, result.String())
+		s = append(s, fmt.Sprintf("%s %s", result.ShopName, result.Message))
 	}
 	return strings.Join(s, ", ")
 }
@@ -70,12 +75,20 @@ func Monitor(db *gorm.DB, warningTimeout int, criticalTimeout int) (rc int) {
 	}
 
 	for _, shop := range shops {
+
+		result := MonitoringResult{
+			ShopName:   shop.Name,
+			ReturnCode: NagiosOk,
+		}
+
 		// Fetch last execution time
 		var product Product
 		trx := db.Where(Product{ShopID: shop.ID}).Order("updated_at asc").First(&product)
 		if trx.Error == gorm.ErrRecordNotFound {
-			fmt.Printf("%s\n", fmt.Errorf("No product found for shop %s", shop.Name))
-			return NagiosCritical
+			result.Message = "has not been updated"
+			result.ReturnCode = NagiosCritical
+			resultMap[NagiosCritical] = append(resultMap[result.ReturnCode], result)
+			continue
 		}
 		if trx.Error != nil {
 			fmt.Printf("%s\n", trx.Error)
@@ -83,36 +96,33 @@ func Monitor(db *gorm.DB, warningTimeout int, criticalTimeout int) (rc int) {
 		}
 
 		// Compare to thresholds and add to result map
-		result := MonitoringResult{ShopName: shop.Name, UpdatedAt: product.UpdatedAt, ReturnCode: NagiosOk}
+		diff := int(time.Now().Sub(product.UpdatedAt.Local()).Seconds())
+		result.Message = fmt.Sprintf("updated %d seconds ago", diff)
+
 		if product.UpdatedAt.Before(criticalTime) {
-			log.Infof("%s has been updated at %s (before time of %s) (crit)", shop.Name, product.UpdatedAt, criticalTime)
 			result.ReturnCode = NagiosCritical
 		} else if product.UpdatedAt.Before(warningTime) {
-			log.Infof("%s has been updated at %s (before time of %s) (warn)", shop.Name, product.UpdatedAt, warningTime)
 			result.ReturnCode = NagiosWarning
 		} else {
-			log.Infof("%s has been updated at %s (after %s) (ok)", shop.Name, product.UpdatedAt, warningTime)
 		}
+		log.Info(result)
 		resultMap[result.ReturnCode] = append(resultMap[result.ReturnCode], result)
 	}
 
-	var message, prefix string
+	var message string
 
 	if len(resultMap[NagiosWarning]) > 0 {
 		rc = NagiosWarning
-		prefix = "WARN"
 		message = FormatMonitoringResults(resultMap[NagiosWarning])
 	} else if len(resultMap[NagiosCritical]) > 0 {
 		rc = NagiosCritical
-		prefix = "CRIT"
 		message = FormatMonitoringResults(resultMap[NagiosCritical])
 	} else {
 		rc = NagiosOk
-		prefix = "OK"
 		message = "All shops have been updated recently"
 	}
 
 	// Print output
-	fmt.Printf("%s - %s\n", prefix, message)
-	return rc
+	fmt.Printf("%s - %s\n", ReturnCodeString(rc), message)
+	return
 }
