@@ -1,3 +1,8 @@
+# END OF LIFE NOTICE
+
+Due to lack of time to do the maintenance, this repository is now archived.
+Don't hesitate to fork it!
+
 # RestockBot
 
 Year 2020 has been quite hard for hardware supply. Graphics cards are out of stock everywhere. Nobody can grab the new generation (AMD RX 6000 series, NVIDIA GeForce RTX 3000 series). Even older generations are hard to find. `RestockBot` is a bot that crawl retailers websites and notify when a product is available.
